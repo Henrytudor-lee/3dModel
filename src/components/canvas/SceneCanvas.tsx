@@ -119,9 +119,10 @@ function SceneObject3D({ object, isSelected, onClick }: {
 
   if (type === 'prism') {
     const sides = (geometry.sides as number) || 6;
+    const radius = (geometry.radius as number) || 0.5;
     return (
       <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
-        <cylinderGeometry args={[0.5, 0.5, (geometry.height as number) || 1, sides]} />
+        <cylinderGeometry args={[radius, radius, (geometry.height as number) || 1, sides]} />
         <meshStandardMaterial
           color={material.color}
           opacity={material.opacity}
@@ -130,7 +131,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
         />
         {isSelected && (
           <lineSegments>
-            <edgesGeometry args={[new THREE.CylinderGeometry(0.5, 0.5, (geometry.height as number) || 1, sides)]} />
+            <edgesGeometry args={[new THREE.CylinderGeometry(radius, radius, (geometry.height as number) || 1, sides)]} />
             <lineBasicMaterial color="#00d9ff" linewidth={2} />
           </lineSegments>
         )}
@@ -342,15 +343,14 @@ function DrawingPreview({
     }
   }
 
-  // Cube preview with height - follows mouse Z from p2
+  // Cube preview with height - follows mouse movement via drawingState.height
   if (activeTool === 'cube' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
     const p2 = drawingState.point2;
     if (p1 && p2) {
       const width = Math.abs(p2[0] - p1[0]) || 1;
       const depth = Math.abs(p2[2] - p1[2]) || 1;
-      // Height = |mouseZ - p2Z|, so moving mouse in Z direction changes height
-      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
+      const height = Math.max(0.1, drawingState.height);
       const centerX = (p1[0] + p2[0]) / 2;
       const centerZ = (p1[2] + p2[2]) / 2;
       const centerY = height / 2;
@@ -363,13 +363,13 @@ function DrawingPreview({
     }
   }
 
-  // Sphere preview - center at (x, radius, z) so it sits on the ground
+  // Sphere preview - center at (x, 0, z) so it's on the grid plane
   if (activeTool === 'sphere' && drawingState.point1) {
     const radius = Math.sqrt(
       Math.pow(mousePos[0] - drawingState.point1[0], 2) +
       Math.pow(mousePos[2] - drawingState.point1[2], 2)
     );
-    const spherePos: [number, number, number] = [drawingState.point1[0], Math.max(0.1, radius), drawingState.point1[2]];
+    const spherePos: [number, number, number] = [drawingState.point1[0], 0, drawingState.point1[2]];
     return (
       <mesh position={spherePos}>
         <sphereGeometry args={[Math.max(0.1, radius), 16, 16]} />
@@ -395,7 +395,7 @@ function DrawingPreview({
     }
   }
 
-  // Cylinder preview with height - follows mouse Z from p2
+  // Cylinder preview with height - follows mouse movement via drawingState.height
   if (activeTool === 'cylinder' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
     const p2 = drawingState.point2;
@@ -404,7 +404,7 @@ function DrawingPreview({
         Math.pow(p2[0] - p1[0], 2) +
         Math.pow(p2[2] - p1[2], 2)
       ) || 0.5;
-      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
+      const height = Math.max(0.1, drawingState.height);
       const centerY = height / 2;
       return (
         <mesh position={[p1[0], centerY, p1[2]]}>
@@ -432,7 +432,7 @@ function DrawingPreview({
     }
   }
 
-  // Prism preview with height - follows mouse Z from p2
+  // Prism preview with height - follows mouse movement via drawingState.height
   if (activeTool === 'prism' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
     const p2 = drawingState.point2;
@@ -442,7 +442,7 @@ function DrawingPreview({
         Math.pow(p2[0] - p1[0], 2) +
         Math.pow(p2[2] - p1[2], 2)
       ) || 0.5;
-      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
+      const height = Math.max(0.1, drawingState.height);
       const centerY = height / 2;
       return (
         <mesh position={[p1[0], centerY, p1[2]]}>
@@ -567,6 +567,36 @@ function SceneContent({
 
 export default function SceneCanvas() {
   const { activeTool, drawingState, addObject, setSelectedId, setDrawingState, resetDrawing, objects } = useSceneStore();
+
+  // Refs for height tracking during drag
+  const initialDragYRef = useRef<number>(0);
+  const lastClientYRef = useRef<number>(0);
+
+  // Track current clientY on pointer move
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      lastClientYRef.current = e.clientY;
+
+      if (drawingState.phase === 'drag' && ['cube', 'cylinder', 'prism'].includes(activeTool || '')) {
+        // Calculate height from mouse movement relative to initial drag position
+        const deltaY = e.clientY - initialDragYRef.current;
+        const newHeight = Math.max(0.1, Math.abs(deltaY) * 0.01);
+        setDrawingState({ height: newHeight });
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    return () => window.removeEventListener('pointermove', handlePointerMove);
+  }, [drawingState.phase, activeTool, setDrawingState]);
+
+  // Handle pointer down to record initial Y when entering drag phase
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // When in placing phase and user clicks, we're about to enter drag phase
+    // Store the clientY that will be used as reference for height
+    if (drawingState.phase === 'placing' && ['cube', 'cylinder', 'prism'].includes(activeTool || '')) {
+      initialDragYRef.current = e.clientY;
+    }
+  }, [drawingState.phase, activeTool]);
 
   const handleGroundClick = useCallback((point: [number, number, number]) => {
     if (!activeTool || activeTool === 'select') return;
@@ -710,13 +740,12 @@ export default function SceneCanvas() {
           point2: point
         });
       } else if (drawingState.phase === 'drag') {
-        // Third click - set height and create cube
-        // Height = distance from p2 to mouse in Z direction
+        // Third click - create cube with current height from drawingState
         const p1 = drawingState.point1!;
         const p2 = drawingState.point2!;
         const width = Math.abs(p2[0] - p1[0]) || 1;
         const depth = Math.abs(p2[2] - p1[2]) || 1;
-        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
+        const height = Math.max(0.1, drawingState.height);
 
         const minX = Math.min(p1[0], p2[0]);
         const minZ = Math.min(p1[2], p2[2]);
@@ -760,14 +789,14 @@ export default function SceneCanvas() {
           point2: point
         });
       } else if (drawingState.phase === 'drag') {
-        // Third click - set height and create cylinder
+        // Third click - create cylinder with current height from drawingState
         const p1 = drawingState.point1!;
         const p2 = drawingState.point2!;
         const radius = Math.sqrt(
           Math.pow(p2[0] - p1[0], 2) +
           Math.pow(p2[2] - p1[2], 2)
         ) || 0.5;
-        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
+        const height = Math.max(0.1, drawingState.height);
 
         const id = crypto.randomUUID();
         const cylinderObject: SceneObject = {
@@ -805,14 +834,14 @@ export default function SceneCanvas() {
           point2: point
         });
       } else if (drawingState.phase === 'drag') {
-        // Third click - set height and create prism
+        // Third click - create prism with current height from drawingState
         const p1 = drawingState.point1!;
         const p2 = drawingState.point2!;
         const radius = Math.sqrt(
           Math.pow(p2[0] - p1[0], 2) +
           Math.pow(p2[2] - p1[2], 2)
         ) || 0.5;
-        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
+        const height = Math.max(0.1, drawingState.height);
 
         const id = crypto.randomUUID();
         const prismObject: SceneObject = {
@@ -858,7 +887,7 @@ export default function SceneCanvas() {
           type: 'sphere',
           geometry: { radius },
           transform: {
-            position: [p1[0], radius, p1[2]],
+            position: [p1[0], 0, p1[2]],
             rotation: [0, 0, 0],
             scale: [1, 1, 1]
           },
@@ -877,19 +906,111 @@ export default function SceneCanvas() {
     // Could be used for real-time preview updates
   }, []);
 
-  // Handle escape key to cancel drawing
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+  // Confirm drawing with right-click
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!activeTool || activeTool === 'select' || drawingState.phase === 'idle') return;
+
+    // Confirm CURVE drawing
+    if (activeTool === 'curve' && drawingState.phase === 'placing') {
+      const ctrlPoints = drawingState.controlPoints || [];
+      if (ctrlPoints.length >= 2) {
+        const id = crypto.randomUUID();
+        const curveObject: SceneObject = {
+          id,
+          name: `Curve_${String(objects.filter(o => o.type === 'curve').length + 1).padStart(2, '0')}`,
+          type: 'curve',
+          geometry: { points: ctrlPoints } as unknown as Record<string, number | number[]>,
+          transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+          material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+          visible: true,
+        };
+        addObject(curveObject);
+        setSelectedId(id);
         resetDrawing();
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [resetDrawing]);
+      return;
+    }
+
+    // Confirm POLYGON drawing
+    if (activeTool === 'polygon' && drawingState.phase === 'placing') {
+      const polyPoints = drawingState.polygonPoints || [];
+      if (polyPoints.length >= 3) {
+        const id = crypto.randomUUID();
+        const polygonObject: SceneObject = {
+          id,
+          name: `Polygon_${String(objects.filter(o => o.type === 'polygon').length + 1).padStart(2, '0')}`,
+          type: 'polygon',
+          geometry: { points: polyPoints } as unknown as Record<string, number | number[]>,
+          transform: { position: [0, 0.005, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+          material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+          visible: true,
+        };
+        addObject(polygonObject);
+        setSelectedId(id);
+        resetDrawing();
+      }
+      return;
+    }
+
+    // Confirm LINE drawing - need at least 2 points, otherwise cancel
+    if (activeTool === 'line' && drawingState.phase === 'placing') {
+      const linePoints = drawingState.polygonPoints || [];
+      if (linePoints.length >= 2) {
+        const id = crypto.randomUUID();
+        const lineObject: SceneObject = {
+          id,
+          name: `Line_${String(objects.filter(o => o.type === 'line').length + 1).padStart(2, '0')}`,
+          type: 'line',
+          geometry: { points: linePoints } as unknown as Record<string, number | number[]>,
+          transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+          material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+          visible: true,
+        };
+        addObject(lineObject);
+        setSelectedId(id);
+        resetDrawing();
+      } else {
+        // Less than 2 points - cancel drawing
+        resetDrawing();
+      }
+      return;
+    }
+
+    // Confirm CUBE drawing (finish at current height)
+    if (activeTool === 'cube' && drawingState.phase === 'drag') {
+      const p1 = drawingState.point1!;
+      const p2 = drawingState.point2!;
+      const width = Math.abs(p2[0] - p1[0]) || 1;
+      const depth = Math.abs(p2[2] - p1[2]) || 1;
+      // Use a default height when confirming with right-click
+      const height = 1;
+
+      const minX = Math.min(p1[0], p2[0]);
+      const minZ = Math.min(p1[2], p2[2]);
+      const posX = minX + width / 2;
+      const posZ = minZ + depth / 2;
+      const posY = height / 2;
+
+      const id = crypto.randomUUID();
+      const cubeObject: SceneObject = {
+        id,
+        name: `Cube_${String(objects.filter(o => o.type === 'cube').length + 1).padStart(2, '0')}`,
+        type: 'cube',
+        geometry: { width, height, depth },
+        transform: { position: [posX, posY, posZ], rotation: [0, 0, 0], scale: [1, 1, 1] },
+        material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+        visible: true,
+      };
+      addObject(cubeObject);
+      setSelectedId(id);
+      resetDrawing();
+      return;
+    }
+  }, [activeTool, drawingState, addObject, setSelectedId, resetDrawing, objects]);
 
   return (
-    <div className="w-full h-full bg-[#0a0a0f]">
+    <div className="w-full h-full bg-[#0a0a0f]" onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
       <Canvas camera={{ position: [10, 10, 10], fov: 50 }}>
         <SceneContent onGroundClick={handleGroundClick} onGroundMove={handleGroundMove} />
       </Canvas>
