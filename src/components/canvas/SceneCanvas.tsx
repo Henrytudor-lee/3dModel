@@ -252,6 +252,7 @@ function DrawingPreview({
     phase: string;
     point1: [number, number, number] | null;
     point2: [number, number, number] | null;
+    height: number;
     polygonPoints: [number, number, number][];
     controlPoints: [number, number, number][];
   };
@@ -995,8 +996,8 @@ export default function SceneCanvas() {
       const id = crypto.randomUUID();
       const cubeObject: SceneObject = {
         id,
-        name: `Cube_${String(objects.filter(o => o.type === 'cube').length + 1).padStart(2, '0')}`,
-        type: 'cube',
+        name: `Cube_${String(objects.filter(o => o.type === 'box').length + 1).padStart(2, '0')}`,
+        type: 'box',
         geometry: { width, height, depth },
         transform: { position: [posX, posY, posZ], rotation: [0, 0, 0], scale: [1, 1, 1] },
         material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
