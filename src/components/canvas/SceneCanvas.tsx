@@ -171,9 +171,9 @@ function SceneObject3D({ object, isSelected, onClick }: {
     }
     shape.closePath();
     const extrudeSettings = { depth: 0.01, bevelEnabled: false };
-    // Position at centroid and rotate -90 degrees around X to lay flat
+    // Position at centroid and rotate +90 degrees around X to lay flat (not mirrored)
     return (
-      <mesh position={[centroidX, 0.005, centroidZ]} rotation={[-Math.PI / 2, 0, 0]} scale={transform.scale} onClick={onClick}>
+      <mesh position={[centroidX, 0.005, centroidZ]} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale} onClick={onClick}>
         <extrudeGeometry args={[shape, extrudeSettings]} />
         <meshStandardMaterial
           color={material.color}
