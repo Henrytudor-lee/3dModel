@@ -113,3 +113,6 @@
 [  165101ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
 [  165472ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
 [  184055ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  212374ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=FW0taweFkEApIO-0ikBZx' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[  213376ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=FW0taweFkEApIO-0ikBZx' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13299
+[  214739ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

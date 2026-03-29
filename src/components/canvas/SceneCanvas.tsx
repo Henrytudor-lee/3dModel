@@ -268,15 +268,17 @@ function DrawingPreview({
     }
   }
 
-  // Cube preview with height
+  // Cube preview with height - follows mouse Z from p2
   if (activeTool === 'cube' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
-    if (p1) {
-      const width = Math.abs((drawingState.point2?.[0] || 0) - p1[0]) || 1;
-      const depth = Math.abs((drawingState.point2?.[2] || 0) - p1[2]) || 1;
-      const height = Math.max(0.1, Math.abs(mousePos[1] - p1[1])) || 1;
-      const centerX = (p1[0] + (drawingState.point2?.[0] || p1[0])) / 2;
-      const centerZ = (p1[2] + (drawingState.point2?.[2] || p1[2])) / 2;
+    const p2 = drawingState.point2;
+    if (p1 && p2) {
+      const width = Math.abs(p2[0] - p1[0]) || 1;
+      const depth = Math.abs(p2[2] - p1[2]) || 1;
+      // Height = |mouseZ - p2Z|, so moving mouse in Z direction changes height
+      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
+      const centerX = (p1[0] + p2[0]) / 2;
+      const centerZ = (p1[2] + p2[2]) / 2;
       const centerY = height / 2;
       return (
         <mesh position={[centerX, centerY, centerZ]}>
@@ -318,15 +320,16 @@ function DrawingPreview({
     }
   }
 
-  // Cylinder preview with height
+  // Cylinder preview with height - follows mouse Z from p2
   if (activeTool === 'cylinder' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
-    if (p1) {
+    const p2 = drawingState.point2;
+    if (p1 && p2) {
       const radius = Math.sqrt(
-        Math.pow((drawingState.point2?.[0] || p1[0]) - p1[0], 2) +
-        Math.pow((drawingState.point2?.[2] || p1[2]) - p1[2], 2)
+        Math.pow(p2[0] - p1[0], 2) +
+        Math.pow(p2[2] - p1[2], 2)
       ) || 0.5;
-      const height = Math.max(0.1, Math.abs(mousePos[1] - p1[1])) || 1;
+      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
       const centerY = height / 2;
       return (
         <mesh position={[p1[0], centerY, p1[2]]}>
@@ -354,16 +357,17 @@ function DrawingPreview({
     }
   }
 
-  // Prism preview with height
+  // Prism preview with height - follows mouse Z from p2
   if (activeTool === 'prism' && drawingState.phase === 'drag') {
     const p1 = drawingState.point1;
+    const p2 = drawingState.point2;
     const sides = 6;
-    if (p1) {
+    if (p1 && p2) {
       const radius = Math.sqrt(
-        Math.pow((drawingState.point2?.[0] || p1[0]) - p1[0], 2) +
-        Math.pow((drawingState.point2?.[2] || p1[2]) - p1[2], 2)
+        Math.pow(p2[0] - p1[0], 2) +
+        Math.pow(p2[2] - p1[2], 2)
       ) || 0.5;
-      const height = Math.max(0.1, Math.abs(mousePos[1] - p1[1])) || 1;
+      const height = Math.max(0.1, Math.abs(mousePos[2] - p2[2]));
       const centerY = height / 2;
       return (
         <mesh position={[p1[0], centerY, p1[2]]}>
@@ -571,11 +575,12 @@ export default function SceneCanvas() {
         });
       } else if (drawingState.phase === 'drag') {
         // Third click - set height and create cube
+        // Height = distance from p2 to mouse in Z direction
         const p1 = drawingState.point1!;
         const p2 = drawingState.point2!;
         const width = Math.abs(p2[0] - p1[0]) || 1;
         const depth = Math.abs(p2[2] - p1[2]) || 1;
-        const height = Math.abs(point[1] - p1[1]) || 1;
+        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
 
         const minX = Math.min(p1[0], p2[0]);
         const minZ = Math.min(p1[2], p2[2]);
@@ -626,7 +631,7 @@ export default function SceneCanvas() {
           Math.pow(p2[0] - p1[0], 2) +
           Math.pow(p2[2] - p1[2], 2)
         ) || 0.5;
-        const height = Math.abs(point[1] - p1[1]) || 1;
+        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
 
         const id = crypto.randomUUID();
         const cylinderObject: SceneObject = {
@@ -671,7 +676,7 @@ export default function SceneCanvas() {
           Math.pow(p2[0] - p1[0], 2) +
           Math.pow(p2[2] - p1[2], 2)
         ) || 0.5;
-        const height = Math.abs(point[1] - p1[1]) || 1;
+        const height = Math.max(0.1, Math.abs(point[2] - p2[2]));
 
         const id = crypto.randomUUID();
         const prismObject: SceneObject = {
