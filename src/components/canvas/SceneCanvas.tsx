@@ -159,16 +159,21 @@ function SceneObject3D({ object, isSelected, onClick }: {
     if (!rawPoints || !Array.isArray(rawPoints) || rawPoints.length < 3) return null;
     const points = rawPoints as unknown as [number, number, number][];
     if (points.length < 3) return null;
+
+    // Calculate centroid to center the shape
+    const centroidX = points.reduce((sum, p) => sum + p[0], 0) / points.length;
+    const centroidZ = points.reduce((sum, p) => sum + p[2], 0) / points.length;
+
     const shape = new THREE.Shape();
-    shape.moveTo(points[0][0], points[0][2]);
+    shape.moveTo(points[0][0] - centroidX, points[0][2] - centroidZ);
     for (let i = 1; i < points.length; i++) {
-      shape.lineTo(points[i][0], points[i][2]);
+      shape.lineTo(points[i][0] - centroidX, points[i][2] - centroidZ);
     }
     shape.closePath();
     const extrudeSettings = { depth: 0.01, bevelEnabled: false };
-    // Rotate -90 degrees around X to lay flat on ground (extrusion was in Z direction)
+    // Position at centroid and rotate -90 degrees around X to lay flat
     return (
-      <mesh position={position} rotation={[-Math.PI / 2, 0, 0]} scale={transform.scale} onClick={onClick}>
+      <mesh position={[centroidX, 0.005, centroidZ]} rotation={[-Math.PI / 2, 0, 0]} scale={transform.scale} onClick={onClick}>
         <extrudeGeometry args={[shape, extrudeSettings]} />
         <meshStandardMaterial
           color={material.color}
