@@ -590,6 +590,17 @@ export default function SceneCanvas() {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, [drawingState.phase, activeTool, setDrawingState]);
 
+  // Handle escape key to cancel drawing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drawingState.phase !== 'idle') {
+        resetDrawing();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drawingState.phase, resetDrawing]);
+
   // Handle pointer down to record initial Y when entering drag phase
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     // When in placing phase and user clicks, we're about to enter drag phase
