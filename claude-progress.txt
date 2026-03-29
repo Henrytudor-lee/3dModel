@@ -1,0 +1,42 @@
+# 3D Modeling Web Tool - Project Progress
+
+## Project Overview
+Browser-based 3D modeling tool built with Next.js + Three.js + Supabase
+
+## Initialization
+- Date: 2026-03-29
+- Initialized by: Claude Code using "Effective Harnesses for Long-Running Agents" methodology
+- Project structure: Next.js + TypeScript + Tailwind CSS + Three.js + Zustand + Supabase
+
+## Current Phase
+Phase 1: Project Initialization
+
+## Completed Tasks
+- [x] Initialize Next.js project with TypeScript and Tailwind
+- [x] Install Three.js, React-Three-Fiber, Drei, Zustand, Supabase
+- [x] Create feature_list.json with 59 comprehensive features
+- [x] Create SPEC.md with full project specification
+- [x] Create init.sh for development server startup
+
+## Next Tasks (Priority Order)
+1. Three.js integration with React-Three-Fiber (F002)
+2. Zustand state management setup (F003)
+3. Three-panel layout implementation (F004)
+4. Basic canvas with cube rendering
+5. Model tree component
+6. Property panel
+7. All toolbar tools (F005-F019)
+
+## Notes for Next Agent
+- Read feature_list.json to understand full scope
+- Always work on one feature at a time
+- Mark feature as "passing" only after proper testing
+- Run `npm run dev` to start development server
+- Use git to commit changes after each feature
+- Update this file after each session
+
+## Git Log Summary
+(Will be populated as work progresses)
+
+---
+End of initial progress file

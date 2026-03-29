@@ -1,0 +1,705 @@
+{
+  "project": "3D Modeling Web Tool",
+  "version": "1.0",
+  "description": "Browser-based 3D modeling tool with real-time rendering, model manipulation, and cloud storage",
+  "features": [
+    {
+      "id": "F001",
+      "category": "infrastructure",
+      "description": "Next.js project initialization with TypeScript and Tailwind CSS",
+      "steps": [
+        "Verify package.json has correct dependencies",
+        "Verify tsconfig.json is configured",
+        "Verify Tailwind is set up correctly",
+        "Run dev server and verify it starts"
+      ],
+      "passes": true
+    },
+    {
+      "id": "F002",
+      "category": "infrastructure",
+      "description": "Three.js integration with React-Three-Fiber",
+      "steps": [
+        "Install three.js, @react-three/fiber, @react-three/drei",
+        "Create basic Canvas component",
+        "Verify WebGL rendering works",
+        "Test basic cube renders on screen"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F003",
+      "category": "infrastructure",
+      "description": "Zustand state management setup for 3D scene",
+      "steps": [
+        "Install zustand",
+        "Create scene store with objects, selectedId, camera state",
+        "Verify store persists across component renders"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F004",
+      "category": "layout",
+      "description": "Three-panel layout: top toolbar, left model tree, right canvas",
+      "steps": [
+        "Create layout component with CSS Grid",
+        "Verify toolbar spans full width at top",
+        "Verify left panel takes ~20% width",
+        "Verify right canvas takes ~80% width"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F005",
+      "category": "toolbar",
+      "description": "Continuous line drawing tool",
+      "steps": [
+        "Add line tool button to toolbar",
+        "Implement click-to-add-point logic",
+        "Render line segments in 3D",
+        "Double-click ends the line",
+        "Verify line persists in scene"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F006",
+      "category": "toolbar",
+      "description": "Bezier curve drawing tool with control handles",
+      "steps": [
+        "Add curve tool button to toolbar",
+        "Implement click-to-add control points",
+        "Render bezier curve in 3D",
+        "Enable dragging control handles to adjust curvature",
+        "Verify curve renders smoothly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F007",
+      "category": "toolbar",
+      "description": "Sphere creation tool with radius setting",
+      "steps": [
+        "Add sphere tool button to toolbar",
+        "Click canvas to place sphere at point",
+        "Show radius input in property panel",
+        "Verify sphere geometry renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F008",
+      "category": "toolbar",
+      "description": "Cylinder creation tool with radius and height settings",
+      "steps": [
+        "Add cylinder tool button to toolbar",
+        "Click canvas to place cylinder",
+        "Show radius and height inputs",
+        "Verify cylinder geometry renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F009",
+      "category": "toolbar",
+      "description": "Cube creation tool with width, height, depth settings",
+      "steps": [
+        "Add cube tool button to toolbar",
+        "Click canvas to place cube",
+        "Show dimension inputs in property panel",
+        "Verify box geometry renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F010",
+      "category": "toolbar",
+      "description": "N-sided prism creation tool with边数 and height settings",
+      "steps": [
+        "Add prism tool button to toolbar",
+        "Allow user to set number of sides (N)",
+        "Click canvas to place prism",
+        "Show边数 and height inputs",
+        "Verify prism geometry renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F011",
+      "category": "toolbar",
+      "description": "Polygon drawing tool with clicking vertices",
+      "steps": [
+        "Add polygon tool button to toolbar",
+        "Click to place vertices sequentially",
+        "Close polygon when clicking first vertex or double-click",
+        "Verify planar polygon renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F012",
+      "category": "toolbar",
+      "description": "Model union (merge) operation",
+      "steps": [
+        "Add union button to toolbar",
+        "Select multiple models",
+        "Click union to merge geometries",
+        "Verify resulting geometry is combined",
+        "Verify union appears in model tree"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F013",
+      "category": "toolbar",
+      "description": "Model subtraction (cut) operation",
+      "steps": [
+        "Add subtract button to toolbar",
+        "Select base model and cutting model",
+        "Click subtract to perform CSG",
+        "Verify resulting geometry shows cutout",
+        "Verify subtraction appears in model tree"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F014",
+      "category": "toolbar",
+      "description": "Model selection and move tool",
+      "steps": [
+        "Add select/move tool button",
+        "Click model to select it",
+        "Show selection highlight",
+        "Drag to move model in 3D space",
+        "Verify transform gizmo appears"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F015",
+      "category": "toolbar",
+      "description": "Model rotation tool with axis handles",
+      "steps": [
+        "Add rotate tool button",
+        "Select model to rotate",
+        "Show rotation gizmo with axis handles",
+        "Drag to rotate around X/Y/Z axes",
+        "Verify rotation transforms apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F016",
+      "category": "toolbar",
+      "description": "Model scale tool with axis handles",
+      "steps": [
+        "Add scale tool button",
+        "Select model to scale",
+        "Show scale gizmo with axis handles",
+        "Drag to scale uniformly or per-axis",
+        "Verify scale transforms apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F017",
+      "category": "toolbar",
+      "description": "Toggle coordinate axes display",
+      "steps": [
+        "Add axes toggle button to toolbar",
+        "Click to show/hide X/Y/Z axes indicator",
+        "Verify axes render at origin",
+        "Verify toggle state persists"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F018",
+      "category": "toolbar",
+      "description": "Toggle ground grid display",
+      "steps": [
+        "Add grid toggle button to toolbar",
+        "Click to show/hide ground reference grid",
+        "Verify grid renders at Y=0",
+        "Verify toggle state persists"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F019",
+      "category": "toolbar",
+      "description": "Camera view presets (top, front, side, perspective)",
+      "steps": [
+        "Add view preset dropdown/buttons",
+        "Implement top view (orthographic)",
+        "Implement front view (orthographic)",
+        "Implement side view (orthographic)",
+        "Implement perspective view",
+        "Verify camera transitions smoothly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F020",
+      "category": "model-tree",
+      "description": "Model tree with hierarchical list",
+      "steps": [
+        "Create model tree component",
+        "Display all scene objects in tree structure",
+        "Show model type icons",
+        "Verify tree updates when models added/removed"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F021",
+      "category": "model-tree",
+      "description": "Model tree node rename (double-click)",
+      "steps": [
+        "Double-click node to enter rename mode",
+        "Show text input for renaming",
+        "Press Enter to confirm",
+        "Verify name updates in scene and tree"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F022",
+      "category": "model-tree",
+      "description": "Model tree node drag-to-reorder",
+      "steps": [
+        "Enable drag handle on nodes",
+        "Drag node to reorder position",
+        "Verify visual feedback during drag",
+        "Verify order persists in scene"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F023",
+      "category": "model-tree",
+      "description": "Model tree visibility toggle (eye icon)",
+      "steps": [
+        "Show eye icon next to each node",
+        "Click to toggle model visibility",
+        "Verify hidden models don't render",
+        "Verify toggle state persists"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F024",
+      "category": "model-tree",
+      "description": "Model tree node delete",
+      "steps": [
+        "Add delete button/icon to node",
+        "Click to delete model",
+        "Verify model removed from scene",
+        "Verify node removed from tree"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F025",
+      "category": "properties",
+      "description": "Property panel with model name input",
+      "steps": [
+        "Select model to show properties panel",
+        "Display name text input",
+        "Edit name and verify updates"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F026",
+      "category": "properties",
+      "description": "Property panel with color picker",
+      "steps": [
+        "Show color picker in properties",
+        "Select color and verify model updates",
+        "Verify color persists"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F027",
+      "category": "properties",
+      "description": "Property panel with transparency slider (0-100%)",
+      "steps": [
+        "Show transparency slider in properties",
+        "Adjust slider and verify model opacity changes",
+        "Verify transparency renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F028",
+      "category": "properties",
+      "description": "Property panel with material type dropdown",
+      "steps": [
+        "Show material dropdown (standard, metal, glass, emissive)",
+        "Select material and verify visual change",
+        "Verify material persists"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F029",
+      "category": "properties",
+      "description": "Property panel with position X/Y/Z inputs",
+      "steps": [
+        "Show position inputs in properties",
+        "Enter values and verify model moves",
+        "Verify changes apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F030",
+      "category": "properties",
+      "description": "Property panel with rotation X/Y/Z inputs",
+      "steps": [
+        "Show rotation inputs in properties",
+        "Enter angle values and verify model rotates",
+        "Verify changes apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F031",
+      "category": "properties",
+      "description": "Property panel with scale X/Y/Z inputs",
+      "steps": [
+        "Show scale inputs in properties",
+        "Enter scale values and verify model scales",
+        "Verify changes apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F032",
+      "category": "properties",
+      "description": "Property panel with wireframe toggle",
+      "steps": [
+        "Show wireframe toggle in properties",
+        "Enable wireframe and verify model renders as lines",
+        "Disable wireframe and verify solid render"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F033",
+      "category": "canvas",
+      "description": "Orbit controls (left-drag to rotate camera)",
+      "steps": [
+        "Left-drag rotates camera around target",
+        "Verify smooth rotation",
+        "Verify rotation stops at boundaries"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F034",
+      "category": "canvas",
+      "description": "Pan controls (right-drag to pan camera)",
+      "steps": [
+        "Right-drag pans camera",
+        "Verify smooth panning",
+        "Verify target point moves correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F035",
+      "category": "canvas",
+      "description": "Zoom controls (scroll wheel)",
+      "steps": [
+        "Scroll forward zooms in",
+        "Scroll backward zooms out",
+        "Verify smooth zoom",
+        "Verify zoom limits work"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F036",
+      "category": "canvas",
+      "description": "Double-click model to focus camera",
+      "steps": [
+        "Double-click on model",
+        "Verify camera animates to focus on model",
+        "Verify model is centered in view"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F037",
+      "category": "canvas",
+      "description": "Model selection highlight",
+      "steps": [
+        "Click model to select",
+        "Verify selection outline appears",
+        "Verify previously selected model deselects"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F038",
+      "category": "canvas",
+      "description": "Transform gizmo for selected model",
+      "steps": [
+        "Select model",
+        "Verify move/rotate/scale gizmo appears",
+        "Drag gizmo handles to transform",
+        "Verify transforms apply correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F039",
+      "category": "canvas",
+      "description": "Multi-select with Shift/Ctrl + click",
+      "steps": [
+        "Hold Shift or Ctrl and click multiple models",
+        "Verify all clicked models selected",
+        "Verify operations apply to all selected"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F040",
+      "category": "canvas",
+      "description": "Basic lighting (ambient + directional)",
+      "steps": [
+        "Scene has ambient light for base illumination",
+        "Scene has directional light for shadows",
+        "Verify models are properly lit"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F041",
+      "category": "canvas",
+      "description": "Shadow rendering (optional toggle)",
+      "steps": [
+        "Add shadow toggle in settings",
+        "Enable shadows and verify they render",
+        "Disable shadows and verify performance improves"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F042",
+      "category": "canvas",
+      "description": "Reflection/refraction materials preview",
+      "steps": [
+        "Apply glass material to model",
+        "Verify refraction effect visible",
+        "Verify reflections on metal surfaces"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F043",
+      "category": "auth",
+      "description": "Supabase authentication setup",
+      "steps": [
+        "Configure Supabase client",
+        "Verify connection to Supabase",
+        "Verify environment variables set"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F044",
+      "category": "auth",
+      "description": "Email/password registration",
+      "steps": [
+        "Create registration form UI",
+        "Implement Supabase sign up",
+        "Verify user created in database",
+        "Verify email verification works"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F045",
+      "category": "auth",
+      "description": "Email/password login",
+      "steps": [
+        "Create login form UI",
+        "Implement Supabase sign in",
+        "Verify authenticated session",
+        "Verify redirect after login"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F046",
+      "category": "auth",
+      "description": "Password reset via email",
+      "steps": [
+        "Add password reset flow",
+        "User requests reset email",
+        "User sets new password via link",
+        "Verify password updated"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F047",
+      "category": "auth",
+      "description": "User profile with avatar upload",
+      "steps": [
+        "Create profile page",
+        "Add avatar image upload to Supabase Storage",
+        "Display avatar in profile",
+        "Verify avatar saves and loads"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F048",
+      "category": "project",
+      "description": "New project creation",
+      "steps": [
+        "Add 'New Project' button/menu",
+        "Prompt for project name",
+        "Create project in database",
+        "Verify blank canvas loads"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F049",
+      "category": "project",
+      "description": "Save project to Supabase",
+      "steps": [
+        "Add 'Save' button",
+        "Serialize scene to JSON",
+        "Store in Supabase projects table",
+        "Verify save completes without error"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F050",
+      "category": "project",
+      "description": "Auto-save with change detection",
+      "steps": [
+        "Detect scene changes",
+        "Prompt or auto-save after N minutes",
+        "Verify saved state matches current",
+        "Verify no data loss"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F051",
+      "category": "project",
+      "description": "Open existing project",
+      "steps": [
+        "Show project list",
+        "Select project to open",
+        "Load scene from database",
+        "Verify scene renders correctly"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F052",
+      "category": "project",
+      "description": "Delete project with confirmation",
+      "steps": [
+        "Add delete option to project list",
+        "Show confirmation dialog",
+        "Delete project from database",
+        "Verify removed from list"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F053",
+      "category": "project",
+      "description": "Rename project",
+      "steps": [
+        "Add rename option",
+        "Enter new name",
+        "Update in database",
+        "Verify name updated in list"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F054",
+      "category": "sharing",
+      "description": "Share project with user by email",
+      "steps": [
+        "Add share button",
+        "Enter email to search user",
+        "Select user from results",
+        "Create share record in database"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F055",
+      "category": "sharing",
+      "description": "Set share permission (view/edit)",
+      "steps": [
+        "When sharing, show permission dropdown",
+        "Select 'view' or 'edit' permission",
+        "Save permission with share",
+        "Verify permission enforced"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F056",
+      "category": "sharing",
+      "description": "View shared with me projects",
+      "steps": [
+        "Add 'Shared with me' section",
+        "List projects where user has access",
+        "Open shared project",
+        "Verify correct permission applied"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F057",
+      "category": "database",
+      "description": "profiles table setup",
+      "steps": [
+        "Create profiles table",
+        "Add RLS policies",
+        "Verify user can read/write own profile"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F058",
+      "category": "database",
+      "description": "projects table setup",
+      "steps": [
+        "Create projects table with scene_data JSONB",
+        "Add RLS policies for owner access",
+        "Add RLS policies for shared access"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F059",
+      "category": "database",
+      "description": "project_shares table setup",
+      "steps": [
+        "Create project_shares table",
+        "Add foreign keys to projects and profiles",
+        "Add unique constraint on project+user",
+        "Add RLS policies"
+      ],
+      "passes": false
+    }
+  ]
+}
