@@ -20,12 +20,28 @@ export interface SceneObject {
   children?: SceneObject[];
 }
 
+// Drawing state for each tool
+export type DrawingPhase = 'idle' | 'placing' | 'drag' | 'height';
+
+export interface DrawingState {
+  phase: DrawingPhase;
+  point1: [number, number, number] | null;  // First clicked point
+  point2: [number, number, number] | null;  // Second point (for cube base)
+  height: number;                            // Height for 3D extrusions
+  polygonPoints: [number, number, number][]; // Points for polygon/line
+  controlPoints: [number, number, number][];  // Control points for curve
+}
+
 interface SceneState {
   objects: SceneObject[];
   selectedId: string | null;
   activeTool: string | null;
   showGrid: boolean;
   showAxes: boolean;
+
+  // Drawing state
+  drawingState: DrawingState;
+  previewObject: SceneObject | null;
 
   // Actions
   addObject: (obj: SceneObject) => void;
@@ -36,7 +52,21 @@ interface SceneState {
   toggleGrid: () => void;
   toggleAxes: () => void;
   clearScene: () => void;
+
+  // Drawing actions
+  setDrawingState: (state: Partial<DrawingState>) => void;
+  resetDrawing: () => void;
+  setPreviewObject: (obj: SceneObject | null) => void;
 }
+
+const initialDrawingState: DrawingState = {
+  phase: 'idle',
+  point1: null,
+  point2: null,
+  height: 1,
+  polygonPoints: [],
+  controlPoints: [],
+};
 
 export const useSceneStore = create<SceneState>((set) => ({
   objects: [],
@@ -44,6 +74,8 @@ export const useSceneStore = create<SceneState>((set) => ({
   activeTool: null,
   showGrid: true,
   showAxes: true,
+  drawingState: initialDrawingState,
+  previewObject: null,
 
   addObject: (obj) => set((state) => ({
     objects: [...state.objects, obj]
@@ -62,11 +94,19 @@ export const useSceneStore = create<SceneState>((set) => ({
 
   setSelectedId: (id) => set({ selectedId: id }),
 
-  setActiveTool: (tool) => set({ activeTool: tool }),
+  setActiveTool: (tool) => set({ activeTool: tool, drawingState: initialDrawingState, previewObject: null }),
 
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
 
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
 
   clearScene: () => set({ objects: [], selectedId: null }),
+
+  setDrawingState: (state) => set((prev) => ({
+    drawingState: { ...prev.drawingState, ...state }
+  })),
+
+  resetDrawing: () => set({ drawingState: initialDrawingState, previewObject: null }),
+
+  setPreviewObject: (obj) => set({ previewObject: obj }),
 }));

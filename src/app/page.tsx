@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Toolbar from '@/components/toolbar/Toolbar';
 import ModelTree from '@/components/model-tree/ModelTree';
 import PropertiesPanel from '@/components/properties/PropertiesPanel';
-import { useSceneStore, SceneObject } from '@/stores/sceneStore';
+import { useSceneStore } from '@/stores/sceneStore';
 
 // Dynamic import for Three.js canvas (client-side only)
 const SceneCanvas = dynamic(() => import('@/components/canvas/SceneCanvas'), {
@@ -17,55 +16,43 @@ const SceneCanvas = dynamic(() => import('@/components/canvas/SceneCanvas'), {
   ),
 });
 
+function getDrawingHint(activeTool: string | null, phase: string): string | null {
+  if (!activeTool || activeTool === 'select') return null;
+
+  switch (activeTool) {
+    case 'line':
+      if (phase === 'idle') return 'Click to set line start point';
+      return 'Click to add more points, or ESC to finish';
+    case 'polygon':
+      if (phase === 'idle') return 'Click to start polygon';
+      return 'Click to add points, click first point to close, or ESC to finish';
+    case 'cube':
+      if (phase === 'idle') return 'Step 1: Click to set first corner';
+      if (phase === 'placing') return 'Step 2: Click to set opposite corner';
+      if (phase === 'drag') return 'Step 3: Click to set height';
+      return 'Click to place cube';
+    case 'cylinder':
+      if (phase === 'idle') return 'Step 1: Click to set center';
+      if (phase === 'placing') return 'Step 2: Click to set radius';
+      if (phase === 'drag') return 'Step 3: Click to set height';
+      return 'Click to place cylinder';
+    case 'prism':
+      if (phase === 'idle') return 'Step 1: Click to set center';
+      if (phase === 'placing') return 'Step 2: Click to set radius';
+      if (phase === 'drag') return 'Step 3: Click to set height';
+      return 'Click to place prism';
+    case 'sphere':
+      if (phase === 'idle') return 'Step 1: Click to set center';
+      if (phase === 'placing') return 'Step 2: Click to set radius';
+      return 'Click to place sphere';
+    default:
+      return `Drawing ${activeTool}...`;
+  }
+}
+
 export default function Home() {
-  const { addObject, activeTool, objects, selectedId, setSelectedId } = useSceneStore();
-
-  // Handle canvas click to add primitives
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (!activeTool || activeTool === 'select') return;
-
-    const toolToType: Record<string, SceneObject['type']> = {
-      cube: 'box',
-      sphere: 'sphere',
-      cylinder: 'cylinder',
-      prism: 'prism',
-    };
-
-    const type = toolToType[activeTool];
-    if (!type) return;
-
-    const id = crypto.randomUUID();
-    const count = objects.filter((o) => o.type === type).length + 1;
-
-    const defaultGeometry: Record<string, Record<string, number>> = {
-      box: { width: 1, height: 1, depth: 1 },
-      sphere: { radius: 0.5 },
-      cylinder: { radius: 0.5, height: 1 },
-      prism: { sides: 6, height: 1 },
-    };
-
-    const newObject: SceneObject = {
-      id,
-      name: `${type.charAt(0).toUpperCase() + type.slice(1)}_${String(count).padStart(2, '0')}`,
-      type,
-      geometry: defaultGeometry[type] || {},
-      transform: {
-        position: [0, 0.5, 0],
-        rotation: [0, 0, 0],
-        scale: [1, 1, 1],
-      },
-      material: {
-        color: '#4a90d9',
-        opacity: 1,
-        type: 'standard',
-        wireframe: false,
-      },
-      visible: true,
-    };
-
-    addObject(newObject);
-    setSelectedId(id);
-  };
+  const { activeTool, drawingState } = useSceneStore();
+  const hint = getDrawingHint(activeTool, drawingState.phase);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -83,16 +70,13 @@ export default function Home() {
         </div>
 
         {/* Right Panel - 3D Canvas */}
-        <div
-          className="flex-1 relative"
-          onClick={handleCanvasClick}
-        >
+        <div className="flex-1 relative">
           <SceneCanvas />
 
           {/* Tool hint */}
-          {activeTool && activeTool !== 'select' && (
+          {hint && (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg text-sm">
-              Click on canvas to place {activeTool}
+              {hint}
             </div>
           )}
         </div>
