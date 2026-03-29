@@ -9,23 +9,54 @@ Browser-based 3D modeling tool built with Next.js + Three.js + Supabase
 - Project structure: Next.js + TypeScript + Tailwind CSS + Three.js + Zustand + Supabase
 
 ## Current Phase
-Phase 1: Project Initialization
+Phase 1 Complete: Project initialization, basic layout, Three.js integration
 
 ## Completed Tasks
-- [x] Initialize Next.js project with TypeScript and Tailwind
-- [x] Install Three.js, React-Three-Fiber, Drei, Zustand, Supabase
-- [x] Create feature_list.json with 59 comprehensive features
-- [x] Create SPEC.md with full project specification
-- [x] Create init.sh for development server startup
+
+### Infrastructure
+- [x] F001: Next.js project initialization with TypeScript and Tailwind CSS
+- [x] F002: Three.js integration with React-Three-Fiber
+- [x] F003: Zustand state management setup for 3D scene
+
+### Layout
+- [x] F004: Three-panel layout (toolbar top, model tree+properties left, canvas right)
+
+### Toolbar Tools
+- [x] F014: Model selection tool (click to select)
+- [x] F017: Toggle coordinate axes display
+- [x] F018: Toggle ground grid display
+- [x] Toolbar buttons for cube, sphere, cylinder, prism, line, curve, polygon (basic add functionality)
+
+### Model Tree
+- [x] F020: Model tree with hierarchical list
+- [x] F023: Model visibility toggle
+- [x] F024: Model node delete
+
+### Properties Panel
+- [x] F025: Name editing
+- [x] F026: Color picker
+- [x] F027: Transparency slider
+- [x] F028: Material type dropdown
+- [x] F029-F031: Position/Rotation/Scale inputs
+- [x] F032: Wireframe toggle
+
+### Canvas
+- [x] F033: Orbit controls (rotate camera)
+- [x] F034: Pan controls (right-drag)
+- [x] F035: Zoom controls (scroll)
+- [x] F040: Basic lighting (ambient + directional)
 
 ## Next Tasks (Priority Order)
-1. Three.js integration with React-Three-Fiber (F002)
-2. Zustand state management setup (F003)
-3. Three-panel layout implementation (F004)
-4. Basic canvas with cube rendering
-5. Model tree component
-6. Property panel
-7. All toolbar tools (F005-F019)
+1. Fix cube/sphere/cylinder creation to use correct geometries (currently all create box)
+2. Implement union/subtract boolean operations (F012, F013)
+3. Implement rotation and scale gizmos (F015, F016)
+4. View presets (F019): top, front, side, perspective
+5. Implement line and curve drawing tools (F005, F006)
+6. Add double-click to focus camera (F036)
+7. Implement multi-select (F039)
+8. Shadow rendering toggle (F041)
+9. Supabase integration and auth (F043-F047)
+10. Project save/load (F048-F053)
 
 ## Notes for Next Agent
 - Read feature_list.json to understand full scope
@@ -34,9 +65,14 @@ Phase 1: Project Initialization
 - Run `npm run dev` to start development server
 - Use git to commit changes after each feature
 - Update this file after each session
+- Build: `npm run build`
+- Dev: `npm run dev`
 
 ## Git Log Summary
-(Will be populated as work progresses)
+```
+a357fc5 feat: Implement basic three-panel layout with Three.js canvas
+2fcaa2f feat: Initialize 3D modeling tool project
+```
 
 ---
-End of initial progress file
+Last updated: 2026-03-29

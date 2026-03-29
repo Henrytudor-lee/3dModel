@@ -25,7 +25,7 @@
         "Verify WebGL rendering works",
         "Test basic cube renders on screen"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F003",
@@ -36,7 +36,7 @@
         "Create scene store with objects, selectedId, camera state",
         "Verify store persists across component renders"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F004",
@@ -48,7 +48,7 @@
         "Verify left panel takes ~20% width",
         "Verify right canvas takes ~80% width"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F005",
@@ -61,7 +61,7 @@
         "Double-click ends the line",
         "Verify line persists in scene"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F006",
@@ -74,7 +74,7 @@
         "Enable dragging control handles to adjust curvature",
         "Verify curve renders smoothly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F007",
@@ -86,7 +86,7 @@
         "Show radius input in property panel",
         "Verify sphere geometry renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F008",
@@ -98,7 +98,7 @@
         "Show radius and height inputs",
         "Verify cylinder geometry renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F009",
@@ -110,7 +110,7 @@
         "Show dimension inputs in property panel",
         "Verify box geometry renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F010",
@@ -123,7 +123,7 @@
         "Show边数 and height inputs",
         "Verify prism geometry renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F011",
@@ -135,7 +135,7 @@
         "Close polygon when clicking first vertex or double-click",
         "Verify planar polygon renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F012",
@@ -148,7 +148,7 @@
         "Verify resulting geometry is combined",
         "Verify union appears in model tree"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F013",
@@ -161,7 +161,7 @@
         "Verify resulting geometry shows cutout",
         "Verify subtraction appears in model tree"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F014",
@@ -174,7 +174,7 @@
         "Drag to move model in 3D space",
         "Verify transform gizmo appears"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F015",
@@ -187,7 +187,7 @@
         "Drag to rotate around X/Y/Z axes",
         "Verify rotation transforms apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F016",
@@ -200,7 +200,7 @@
         "Drag to scale uniformly or per-axis",
         "Verify scale transforms apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F017",
@@ -212,7 +212,7 @@
         "Verify axes render at origin",
         "Verify toggle state persists"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F018",
@@ -224,7 +224,7 @@
         "Verify grid renders at Y=0",
         "Verify toggle state persists"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F019",
@@ -238,7 +238,7 @@
         "Implement perspective view",
         "Verify camera transitions smoothly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F020",
@@ -250,7 +250,7 @@
         "Show model type icons",
         "Verify tree updates when models added/removed"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F021",
@@ -262,7 +262,7 @@
         "Press Enter to confirm",
         "Verify name updates in scene and tree"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F022",
@@ -274,7 +274,7 @@
         "Verify visual feedback during drag",
         "Verify order persists in scene"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F023",
@@ -286,7 +286,7 @@
         "Verify hidden models don't render",
         "Verify toggle state persists"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F024",
@@ -298,7 +298,7 @@
         "Verify model removed from scene",
         "Verify node removed from tree"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F025",
@@ -309,7 +309,7 @@
         "Display name text input",
         "Edit name and verify updates"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F026",
@@ -320,7 +320,7 @@
         "Select color and verify model updates",
         "Verify color persists"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F027",
@@ -331,7 +331,7 @@
         "Adjust slider and verify model opacity changes",
         "Verify transparency renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F028",
@@ -342,7 +342,7 @@
         "Select material and verify visual change",
         "Verify material persists"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F029",
@@ -353,7 +353,7 @@
         "Enter values and verify model moves",
         "Verify changes apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F030",
@@ -364,7 +364,7 @@
         "Enter angle values and verify model rotates",
         "Verify changes apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F031",
@@ -375,7 +375,7 @@
         "Enter scale values and verify model scales",
         "Verify changes apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F032",
@@ -386,7 +386,7 @@
         "Enable wireframe and verify model renders as lines",
         "Disable wireframe and verify solid render"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F033",
@@ -397,7 +397,7 @@
         "Verify smooth rotation",
         "Verify rotation stops at boundaries"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F034",
@@ -408,7 +408,7 @@
         "Verify smooth panning",
         "Verify target point moves correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F035",
@@ -420,7 +420,7 @@
         "Verify smooth zoom",
         "Verify zoom limits work"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F036",
@@ -431,7 +431,7 @@
         "Verify camera animates to focus on model",
         "Verify model is centered in view"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F037",
@@ -442,7 +442,7 @@
         "Verify selection outline appears",
         "Verify previously selected model deselects"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F038",
@@ -454,7 +454,7 @@
         "Drag gizmo handles to transform",
         "Verify transforms apply correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F039",
@@ -465,7 +465,7 @@
         "Verify all clicked models selected",
         "Verify operations apply to all selected"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F040",
@@ -476,7 +476,7 @@
         "Scene has directional light for shadows",
         "Verify models are properly lit"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F041",
@@ -487,7 +487,7 @@
         "Enable shadows and verify they render",
         "Disable shadows and verify performance improves"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F042",
@@ -498,7 +498,7 @@
         "Verify refraction effect visible",
         "Verify reflections on metal surfaces"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F043",
@@ -509,7 +509,7 @@
         "Verify connection to Supabase",
         "Verify environment variables set"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F044",
@@ -521,7 +521,7 @@
         "Verify user created in database",
         "Verify email verification works"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F045",
@@ -533,7 +533,7 @@
         "Verify authenticated session",
         "Verify redirect after login"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F046",
@@ -545,7 +545,7 @@
         "User sets new password via link",
         "Verify password updated"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F047",
@@ -557,7 +557,7 @@
         "Display avatar in profile",
         "Verify avatar saves and loads"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F048",
@@ -569,7 +569,7 @@
         "Create project in database",
         "Verify blank canvas loads"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F049",
@@ -581,7 +581,7 @@
         "Store in Supabase projects table",
         "Verify save completes without error"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F050",
@@ -593,7 +593,7 @@
         "Verify saved state matches current",
         "Verify no data loss"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F051",
@@ -605,7 +605,7 @@
         "Load scene from database",
         "Verify scene renders correctly"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F052",
@@ -617,7 +617,7 @@
         "Delete project from database",
         "Verify removed from list"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F053",
@@ -629,7 +629,7 @@
         "Update in database",
         "Verify name updated in list"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F054",
@@ -641,7 +641,7 @@
         "Select user from results",
         "Create share record in database"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F055",
@@ -653,7 +653,7 @@
         "Save permission with share",
         "Verify permission enforced"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F056",
@@ -665,7 +665,7 @@
         "Open shared project",
         "Verify correct permission applied"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F057",
@@ -676,7 +676,7 @@
         "Add RLS policies",
         "Verify user can read/write own profile"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F058",
@@ -687,7 +687,7 @@
         "Add RLS policies for owner access",
         "Add RLS policies for shared access"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F059",
@@ -699,7 +699,7 @@
         "Add unique constraint on project+user",
         "Add RLS policies"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }
