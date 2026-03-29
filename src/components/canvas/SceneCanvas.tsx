@@ -179,6 +179,33 @@ function SceneObject3D({ object, isSelected, onClick }: {
     );
   }
 
+  if (type === 'curve') {
+    const rawPoints = geometry.points;
+    if (!rawPoints || !Array.isArray(rawPoints) || rawPoints.length < 2) return null;
+    const points = rawPoints as unknown as [number, number, number][];
+    if (points.length < 2) return null;
+
+    // Create a smooth curve through the points
+    const curve = new THREE.CatmullRomCurve3(
+      points.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+      false, // not closed
+      'catmullrom', // type
+      0.5 // tension
+    );
+
+    const curvePoints = curve.getPoints(50);
+    const lineArr: [number, number, number][] = curvePoints.map(p => [p.x, p.y, p.z]);
+
+    return (
+      <Line
+        points={lineArr}
+        color={material.color}
+        lineWidth={2}
+        onClick={onClick}
+      />
+    );
+  }
+
   return null;
 }
 
@@ -251,6 +278,53 @@ function DrawingPreview({
     }
   }
 
+  // Curve preview - smooth bezier curve through control points
+  if (activeTool === 'curve') {
+    const controlPoints = drawingState.controlPoints || [];
+    if (controlPoints.length > 0) {
+      const allPoints = [...controlPoints, mousePos];
+      if (allPoints.length >= 2) {
+        // Create smooth curve through points
+        const curve = new THREE.CatmullRomCurve3(
+          allPoints.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+          false,
+          'catmullrom',
+          0.5
+        );
+        const curvePoints = curve.getPoints(50);
+
+        // Also show control point lines
+        return (
+          <group>
+            {/* Control point lines */}
+            <Line
+              points={allPoints}
+              color="#ff9900"
+              lineWidth={1}
+              transparent
+              opacity={0.5}
+            />
+            {/* Smooth curve */}
+            <Line
+              points={curvePoints}
+              color="#00d9ff"
+              lineWidth={2}
+              transparent
+              opacity={0.8}
+            />
+            {/* Control points markers */}
+            {allPoints.map((p, i) => (
+              <mesh key={i} position={p}>
+                <sphereGeometry args={[0.06, 8, 8]} />
+                <meshBasicMaterial color={i === 0 ? "#00ff00" : "#ff9900"} />
+              </mesh>
+            ))}
+          </group>
+        );
+      }
+    }
+  }
+
   // Cube preview - show rectangle on ground
   if (activeTool === 'cube' && drawingState.phase === 'placing') {
     const p1 = drawingState.point1;
@@ -289,14 +363,15 @@ function DrawingPreview({
     }
   }
 
-  // Sphere preview
+  // Sphere preview - center at (x, radius, z) so it sits on the ground
   if (activeTool === 'sphere' && drawingState.point1) {
     const radius = Math.sqrt(
       Math.pow(mousePos[0] - drawingState.point1[0], 2) +
       Math.pow(mousePos[2] - drawingState.point1[2], 2)
     );
+    const spherePos: [number, number, number] = [drawingState.point1[0], Math.max(0.1, radius), drawingState.point1[2]];
     return (
-      <mesh position={drawingState.point1}>
+      <mesh position={spherePos}>
         <sphereGeometry args={[Math.max(0.1, radius), 16, 16]} />
         <meshStandardMaterial color="#4a90d9" transparent opacity={0.5} wireframe />
       </mesh>
@@ -378,27 +453,44 @@ function DrawingPreview({
     }
   }
 
-  // Polygon preview
+  // Polygon preview with snap indication
   if (activeTool === 'polygon') {
     const polyPoints = drawingState.polygonPoints || [];
     if (polyPoints.length > 0) {
+      const firstPoint = polyPoints[0];
+      const distToFirst = Math.sqrt(
+        Math.pow(mousePos[0] - firstPoint[0], 2) +
+        Math.pow(mousePos[2] - firstPoint[2], 2)
+      );
+      const isSnapping = polyPoints.length >= 3 && distToFirst < 0.3;
+
+      // Draw the polygon lines
       const allPoints = [...polyPoints, mousePos];
       if (allPoints.length >= 2) {
         return (
-          <Line
-            points={allPoints}
-            color="#00d9ff"
-            lineWidth={2}
-            transparent
-            opacity={0.7}
-          />
+          <group>
+            <Line
+              points={allPoints}
+              color={isSnapping ? "#00ff00" : "#00d9ff"}
+              lineWidth={2}
+              transparent
+              opacity={0.7}
+            />
+            {/* Highlight first point when close */}
+            {isSnapping && (
+              <mesh position={firstPoint}>
+                <sphereGeometry args={[0.15, 16, 16]} />
+                <meshBasicMaterial color="#00ff00" transparent opacity={0.5} />
+              </mesh>
+            )}
+          </group>
         );
       }
     }
   }
 
-  // Point markers for first/second clicks
-  if (drawingState.point1) {
+  // Point markers for first/second clicks (also show for curve control points)
+  if (drawingState.point1 && !['line', 'polygon', 'curve'].includes(activeTool || '')) {
     return (
       <group>
         <mesh position={drawingState.point1}>
@@ -515,6 +607,50 @@ export default function SceneCanvas() {
       return;
     }
 
+    // CURVE TOOL - add control points, double-click or click near first point to finish
+    if (tool === 'curve') {
+      if (drawingState.phase === 'idle') {
+        // Start curve - first control point
+        setDrawingState({
+          phase: 'placing',
+          point1: point,
+          controlPoints: [point]
+        });
+      } else if (drawingState.phase === 'placing') {
+        const ctrlPoints = drawingState.controlPoints || [];
+        // Check if clicking near first point to close curve
+        if (ctrlPoints.length >= 2) {
+          const firstPoint = ctrlPoints[0];
+          const dist = Math.sqrt(
+            Math.pow(point[0] - firstPoint[0], 2) +
+            Math.pow(point[2] - firstPoint[2], 2)
+          );
+          if (dist < 0.3) {
+            // Close and create curve
+            const id = crypto.randomUUID();
+            const curveObject: SceneObject = {
+              id,
+              name: `Curve_${String(objects.filter(o => o.type === 'curve').length + 1).padStart(2, '0')}`,
+              type: 'curve',
+              geometry: { points: ctrlPoints } as unknown as Record<string, number | number[]>,
+              transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+              material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+              visible: true,
+            };
+            addObject(curveObject);
+            setSelectedId(id);
+            resetDrawing();
+            return;
+          }
+        }
+        // Add control point
+        setDrawingState({
+          controlPoints: [...ctrlPoints, point]
+        });
+      }
+      return;
+    }
+
     // POLYGON TOOL
     if (tool === 'polygon') {
       if (drawingState.phase === 'idle') {
@@ -533,8 +669,8 @@ export default function SceneCanvas() {
             Math.pow(point[0] - firstPoint[0], 2) +
             Math.pow(point[2] - firstPoint[2], 2)
           );
-          if (dist < 0.2) {
-            // Close polygon and create it
+          if (dist < 0.3) {
+            // Snap to first point and close polygon
             const id = crypto.randomUUID();
             const polygonObject: SceneObject = {
               id,
