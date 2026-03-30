@@ -75,8 +75,8 @@ export default function Home() {
 
           {/* Tool hint */}
           {hint && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg text-sm">
-              {hint}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#1e293b] to-[#16213e] text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg border border-white/10" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+              💡 {hint}
             </div>
           )}
         </div>
