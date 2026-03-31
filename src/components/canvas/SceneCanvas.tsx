@@ -573,7 +573,8 @@ function SceneContent({
 }
 
 export default function SceneCanvas() {
-  const { activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects } = useSceneStore();
+  const { activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects, theme } = useSceneStore();
+  const isDark = theme === 'dark';
 
   // Refs for height tracking during drag
   const initialDragYRef = useRef<number>(0);
@@ -1028,8 +1029,13 @@ export default function SceneCanvas() {
   }, [activeTool, drawingState, addObject, setSelectedIds, resetDrawing, objects]);
 
   return (
-    <div className="w-full h-full bg-[#0a0a0f]" onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
-      <Canvas camera={{ position: [10, 10, 10], fov: 50 }}>
+    <div className={`w-full h-full ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f0f4f8]'}`} onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
+      <Canvas
+        camera={{ position: [10, 10, 10], fov: 50 }}
+        onCreated={({ scene }) => {
+          scene.background = new THREE.Color(isDark ? '#0a0a0f' : '#f0f4f8');
+        }}
+      >
         <SceneContent onGroundClick={handleGroundClick} onGroundMove={handleGroundMove} />
       </Canvas>
     </div>
