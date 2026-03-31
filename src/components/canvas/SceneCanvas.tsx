@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { Canvas, ThreeEvent } from '@react-three/fiber';
+import { Canvas, ThreeEvent, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Line } from '@react-three/drei';
 import { useSceneStore, SceneObject } from '@/stores/sceneStore';
 import * as THREE from 'three';
@@ -524,8 +524,63 @@ function SceneContent({
   onGroundClick: (point: [number, number, number]) => void;
   onGroundMove: (point: [number, number, number]) => void;
 }) {
-  const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState } = useSceneStore();
+  const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState, theme } = useSceneStore();
   const [mousePos, setMousePos] = useState<[number, number, number]>([0, 0, 0]);
+  const { scene, camera } = useThree();
+  const isMoveTool = activeTool === 'move';
+
+  // Camera panning refs
+  const isPanningRef = useRef(false);
+  const lastPosRef = useRef({ x: 0, y: 0 });
+
+  // Update scene background when theme changes
+  useEffect(() => {
+    scene.background = new THREE.Color(theme === 'dark' ? '#0a0a0f' : '#f0f4f8');
+  }, [theme, scene]);
+
+  // Handle camera panning for move tool
+  useEffect(() => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0 || !isMoveTool) return; // Only left click for move tool
+      isPanningRef.current = true;
+      lastPosRef.current = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = 'grabbing';
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isPanningRef.current || !isMoveTool) return;
+
+      const deltaX = e.clientX - lastPosRef.current.x;
+      const deltaY = e.clientY - lastPosRef.current.y;
+      lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+      // Move camera in the view plane
+      const speed = 0.02;
+      camera.position.x -= deltaX * speed;
+      camera.position.y += deltaY * speed;
+    };
+
+    const handleMouseUp = () => {
+      isPanningRef.current = false;
+      if (canvas) canvas.style.cursor = 'grab';
+    };
+
+    if (isMoveTool) {
+      canvas.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      canvas.style.cursor = 'grab';
+    }
+
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isMoveTool, camera]);
 
   const handleMouseMove = useCallback((point: [number, number, number]) => {
     setMousePos(point);
@@ -538,10 +593,10 @@ function SceneContent({
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
 
-      {/* Camera Controls - disable when drawing */}
+      {/* Camera Controls - disable when drawing or using move tool */}
       <OrbitControls
         makeDefault
-        enabled={!activeTool || activeTool === 'select'}
+        enabled={!activeTool || activeTool === 'select' || activeTool === 'move'}
       />
 
       {/* Grid */}
@@ -1032,9 +1087,6 @@ export default function SceneCanvas() {
     <div className={`w-full h-full ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f0f4f8]'}`} onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 50 }}
-        onCreated={({ scene }) => {
-          scene.background = new THREE.Color(isDark ? '#0a0a0f' : '#f0f4f8');
-        }}
       >
         <SceneContent onGroundClick={handleGroundClick} onGroundMove={handleGroundMove} />
       </Canvas>
