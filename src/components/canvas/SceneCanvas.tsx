@@ -517,6 +517,109 @@ function DrawingPreview({
   return null;
 }
 
+// Paste preview component - renders ghost of objects being pasted
+function PastePreview({
+  clipboard,
+  position
+}: {
+  clipboard: SceneObject[];
+  position: [number, number, number];
+}) {
+  // Calculate centroid offset for positioning
+  const centroid: [number, number, number] = [0, 0, 0];
+  clipboard.forEach((obj) => {
+    centroid[0] += obj.transform.position[0];
+    centroid[1] += obj.transform.position[1];
+    centroid[2] += obj.transform.position[2];
+  });
+  centroid[0] /= clipboard.length;
+  centroid[1] /= clipboard.length;
+  centroid[2] /= clipboard.length;
+
+  return (
+    <>
+      {clipboard.map((obj) => {
+        // Calculate offset position
+        const offsetPos: [number, number, number] = [
+          position[0] + (obj.transform.position[0] - centroid[0]),
+          position[1] + (obj.transform.position[1] - centroid[1]),
+          position[2] + (obj.transform.position[2] - centroid[2]),
+        ];
+
+        if (obj.type === 'box') {
+          return (
+            <mesh key={obj.id} position={offsetPos} rotation={obj.transform.rotation} scale={obj.transform.scale}>
+              <boxGeometry args={[
+                (obj.geometry.width as number) || 1,
+                (obj.geometry.height as number) || 1,
+                (obj.geometry.depth as number) || 1
+              ]} />
+              <meshStandardMaterial
+                color={obj.material.color}
+                opacity={0.5}
+                transparent
+                wireframe={obj.material.wireframe}
+              />
+            </mesh>
+          );
+        }
+
+        if (obj.type === 'sphere') {
+          return (
+            <mesh key={obj.id} position={offsetPos} scale={obj.transform.scale}>
+              <sphereGeometry args={[(obj.geometry.radius as number) || 0.5, 16, 16]} />
+              <meshStandardMaterial
+                color={obj.material.color}
+                opacity={0.5}
+                transparent
+                wireframe={obj.material.wireframe}
+              />
+            </mesh>
+          );
+        }
+
+        if (obj.type === 'cylinder') {
+          return (
+            <mesh key={obj.id} position={offsetPos} rotation={obj.transform.rotation} scale={obj.transform.scale}>
+              <cylinderGeometry args={[
+                (obj.geometry.radiusTop as number) || 0.5,
+                (obj.geometry.radiusBottom as number) || 0.5,
+                (obj.geometry.height as number) || 1,
+                32
+              ]} />
+              <meshStandardMaterial
+                color={obj.material.color}
+                opacity={0.5}
+                transparent
+                wireframe={obj.material.wireframe}
+              />
+            </mesh>
+          );
+        }
+
+        if (obj.type === 'prism') {
+          const radius = (obj.geometry.radius as number) || 0.5;
+          const height = (obj.geometry.height as number) || 1;
+          const sides = 6;
+          return (
+            <mesh key={obj.id} position={offsetPos} scale={obj.transform.scale}>
+              <cylinderGeometry args={[radius, radius, height, sides]} />
+              <meshStandardMaterial
+                color={obj.material.color}
+                opacity={0.5}
+                transparent
+                wireframe={obj.material.wireframe}
+              />
+            </mesh>
+          );
+        }
+
+        return null;
+      })}
+    </>
+  );
+}
+
 function SceneContent({
   onGroundClick,
   onGroundMove
@@ -524,7 +627,8 @@ function SceneContent({
   onGroundClick: (point: [number, number, number]) => void;
   onGroundMove: (point: [number, number, number]) => void;
 }) {
-  const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState, theme } = useSceneStore();
+  const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState, theme,
+    clipboard, isPasting, pastePosition, updatePastePosition } = useSceneStore();
   const [mousePos, setMousePos] = useState<[number, number, number]>([0, 0, 0]);
   const { scene } = useThree();
 
@@ -536,7 +640,11 @@ function SceneContent({
   const handleMouseMove = useCallback((point: [number, number, number]) => {
     setMousePos(point);
     onGroundMove(point);
-  }, [onGroundMove]);
+    // Update paste position when pasting
+    if (isPasting) {
+      updatePastePosition(point);
+    }
+  }, [onGroundMove, isPasting, updatePastePosition]);
 
   return (
     <>
@@ -544,7 +652,7 @@ function SceneContent({
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
 
-      {/* Camera Controls - disable when drawing */}
+      {/* Camera Controls - disable when drawing or pasting */}
       <OrbitControls
         makeDefault
         enabled={!activeTool || activeTool === 'select'}
@@ -565,6 +673,11 @@ function SceneContent({
         mousePos={mousePos}
       />
 
+      {/* Paste preview */}
+      {isPasting && clipboard.length > 0 && pastePosition && (
+        <PastePreview clipboard={clipboard} position={pastePosition} />
+      )}
+
       {/* Objects */}
       {objects.map((obj) => (
         <SceneObject3D
@@ -579,7 +692,11 @@ function SceneContent({
 }
 
 export default function SceneCanvas() {
-  const { activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects, theme } = useSceneStore();
+  const {
+    activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects, theme,
+    clipboard, isPasting, pastePosition, copySelected, startPaste, updatePastePosition, confirmPaste, cancelPaste,
+    undo, redo,
+  } = useSceneStore();
   const isDark = theme === 'dark';
 
   // Refs for height tracking during drag
@@ -606,13 +723,50 @@ export default function SceneCanvas() {
   // Handle escape key to cancel drawing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && drawingState.phase !== 'idle') {
-        resetDrawing();
+      // Copy: Ctrl+C or Cmd+C
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isPasting) {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+
+      // Paste: Ctrl+V or Cmd+V
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        if (clipboard.length > 0 && !isPasting) {
+          startPaste([0, 0, 0]);
+        } else if (isPasting) {
+          confirmPaste();
+        }
+        return;
+      }
+
+      // Undo: Ctrl+Z or Cmd+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+
+      // Redo: Ctrl+Y or Cmd+Y or Ctrl+Shift+Z
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      // Cancel paste or drawing with Escape
+      if (e.key === 'Escape') {
+        if (isPasting) {
+          cancelPaste();
+        } else if (drawingState.phase !== 'idle') {
+          resetDrawing();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [drawingState.phase, resetDrawing]);
+  }, [drawingState.phase, resetDrawing, copySelected, clipboard, isPasting, startPaste, confirmPaste, undo, redo, cancelPaste]);
 
   // Handle pointer down to record initial Y when entering drag phase
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -621,9 +775,15 @@ export default function SceneCanvas() {
     if (drawingState.phase === 'placing' && ['cube', 'cylinder', 'prism'].includes(activeTool || '')) {
       initialDragYRef.current = e.clientY;
     }
-  }, [drawingState.phase, activeTool]);
+  }, [isPasting, confirmPaste, drawingState.phase, activeTool]);
 
   const handleGroundClick = useCallback((point: [number, number, number]) => {
+    // Handle paste confirmation
+    if (isPasting) {
+      confirmPaste();
+      return;
+    }
+
     if (!activeTool || activeTool === 'select') return;
 
     const tool = activeTool;
