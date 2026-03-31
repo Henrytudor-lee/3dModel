@@ -17,43 +17,56 @@ const typeColors: Record<string, string> = {
 // SVG Icons for object types
 const TypeIcons: Record<string, () => React.ReactNode> = {
   box: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 3L3 8v8l9 5 9-5V8l-9-5z" />
+      <path d="M12 3v13" />
+      <path d="M3 8l9 5 9-5" />
     </svg>
   ),
   sphere: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="9" ry="3" />
     </svg>
   ),
   cylinder: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <ellipse cx="12" cy="6" rx="7" ry="3" /><ellipse cx="12" cy="18" rx="7" ry="3" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <ellipse cx="12" cy="18" rx="7" ry="3" />
+      <line x1="5" y1="6" x2="5" y2="18" />
+      <line x1="19" y1="6" x2="19" y2="18" />
     </svg>
   ),
   prism: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polygon points="12,2 22,20 2,20" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 3L3 8v8l9 5 9-5V8l-9-5z" />
+      <path d="M12 3l-5 2.5" />
+      <path d="M12 3l5 2.5" />
+      <path d="M7 5.5v8" />
+      <path d="M17 5.5v8" />
     </svg>
   ),
   line: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <line x1="5" y1="19" x2="19" y2="5" />
     </svg>
   ),
   curve: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M4 20 Q 12 4, 20 12" />
     </svg>
   ),
   polygon: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <polygon points="12,2 20,8 17,18 7,18 4,8" />
     </svg>
   ),
   group: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
     </svg>
   ),
 };
