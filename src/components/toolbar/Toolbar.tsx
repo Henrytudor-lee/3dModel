@@ -36,20 +36,19 @@ const Icons = {
     </svg>
   ),
   cube: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M12 3L3 8v8l9 5 9-5V8l-9-5z" />
-      <path d="M12 3v13" />
-      <path d="M3 8l9 5 9-5" />
-      <path d="M3 13l9 5 9-5" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   ),
   prism: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M12 3L3 8v8l9 5 9-5V8l-9-5z" />
-      <path d="M12 3l-5 2.5" />
-      <path d="M12 3l5 2.5" />
-      <path d="M7 5.5v8" />
-      <path d="M17 5.5v8" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l-8 4.5v9l8 4.5 8-4.5v-9L12 2z" />
+      <path d="M12 22V12" />
+      <path d="M20 6.5l-8 4.5" />
+      <path d="M4 6.5l8 4.5" />
+      <ellipse cx="12" cy="12" rx="8" ry="4.5" />
     </svg>
   ),
   polygon: () => (
