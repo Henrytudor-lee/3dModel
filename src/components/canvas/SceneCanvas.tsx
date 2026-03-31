@@ -526,61 +526,12 @@ function SceneContent({
 }) {
   const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState, theme } = useSceneStore();
   const [mousePos, setMousePos] = useState<[number, number, number]>([0, 0, 0]);
-  const { scene, camera } = useThree();
-  const isMoveTool = activeTool === 'move';
-
-  // Camera panning refs
-  const isPanningRef = useRef(false);
-  const lastPosRef = useRef({ x: 0, y: 0 });
+  const { scene } = useThree();
 
   // Update scene background when theme changes
   useEffect(() => {
     scene.background = new THREE.Color(theme === 'dark' ? '#0a0a0f' : '#f0f4f8');
   }, [theme, scene]);
-
-  // Handle camera panning for move tool
-  useEffect(() => {
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0 || !isMoveTool) return; // Only left click for move tool
-      isPanningRef.current = true;
-      lastPosRef.current = { x: e.clientX, y: e.clientY };
-      canvas.style.cursor = 'grabbing';
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isPanningRef.current || !isMoveTool) return;
-
-      const deltaX = e.clientX - lastPosRef.current.x;
-      const deltaY = e.clientY - lastPosRef.current.y;
-      lastPosRef.current = { x: e.clientX, y: e.clientY };
-
-      // Move camera in the view plane
-      const speed = 0.02;
-      camera.position.x -= deltaX * speed;
-      camera.position.y += deltaY * speed;
-    };
-
-    const handleMouseUp = () => {
-      isPanningRef.current = false;
-      if (canvas) canvas.style.cursor = 'grab';
-    };
-
-    if (isMoveTool) {
-      canvas.addEventListener('mousedown', handleMouseDown);
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      canvas.style.cursor = 'grab';
-    }
-
-    return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isMoveTool, camera]);
 
   const handleMouseMove = useCallback((point: [number, number, number]) => {
     setMousePos(point);
@@ -593,10 +544,10 @@ function SceneContent({
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
 
-      {/* Camera Controls - disable when drawing or using move tool */}
+      {/* Camera Controls - disable when drawing */}
       <OrbitControls
         makeDefault
-        enabled={!activeTool || activeTool === 'select' || activeTool === 'move'}
+        enabled={!activeTool || activeTool === 'select'}
       />
 
       {/* Grid */}
