@@ -54,18 +54,19 @@ function getDrawingHint(activeTool: string | null, phase: string): string | null
 }
 
 export default function Home() {
-  const { activeTool, drawingState } = useSceneStore();
+  const { activeTool, drawingState, theme } = useSceneStore();
   const hint = getDrawingHint(activeTool, drawingState.phase);
+  const isDark = theme === 'dark';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[#0a0a0f]">
+    <div className={`h-screen flex flex-col overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f8fafc]'}`}>
       {/* Top Toolbar */}
       <Toolbar />
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Model Tree + Properties */}
-        <div className="w-[280px] flex flex-col border-r border-white/5">
+        <div className={`w-[280px] flex flex-col border-r ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
           <div className="flex-1 overflow-hidden">
             <ModelTree />
           </div>
@@ -78,7 +79,9 @@ export default function Home() {
 
           {/* Tool hint */}
           {hint && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white/90 px-4 py-2 rounded-lg text-xs font-medium border border-white/10">
+            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-lg text-xs font-medium border ${
+              isDark ? 'bg-black/80 text-white/90 border-white/10' : 'bg-white/90 text-gray-900 border-gray-200'
+            }`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#00d9ff]">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 16v-4M12 8h.01" />
@@ -88,11 +91,11 @@ export default function Home() {
           )}
 
           {/* Viewport controls hint */}
-          <div className="absolute bottom-6 right-6 flex items-center gap-2 text-[10px] text-gray-600">
+          <div className={`absolute bottom-6 right-6 flex items-center gap-2 text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
             <span>Orbit: LMB</span>
-            <span className="text-white/20">|</span>
+            <span className={isDark ? 'text-white/20' : 'text-black/20'}>|</span>
             <span>Pan: MMB</span>
-            <span className="text-white/20">|</span>
+            <span className={isDark ? 'text-white/20' : 'text-black/20'}>|</span>
             <span>Zoom: Scroll</span>
           </div>
         </div>

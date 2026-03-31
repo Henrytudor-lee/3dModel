@@ -524,7 +524,7 @@ function SceneContent({
   onGroundClick: (point: [number, number, number]) => void;
   onGroundMove: (point: [number, number, number]) => void;
 }) {
-  const { objects, selectedId, setSelectedId, showGrid, showAxes, activeTool, drawingState } = useSceneStore();
+  const { objects, selectedIds, setSelectedIds, showGrid, showAxes, activeTool, drawingState } = useSceneStore();
   const [mousePos, setMousePos] = useState<[number, number, number]>([0, 0, 0]);
 
   const handleMouseMove = useCallback((point: [number, number, number]) => {
@@ -564,8 +564,8 @@ function SceneContent({
         <SceneObject3D
           key={obj.id}
           object={obj}
-          isSelected={selectedId === obj.id}
-          onClick={() => setSelectedId(obj.id)}
+          isSelected={selectedIds.includes(obj.id)}
+          onClick={() => setSelectedIds([obj.id])}
         />
       ))}
     </>
@@ -573,7 +573,7 @@ function SceneContent({
 }
 
 export default function SceneCanvas() {
-  const { activeTool, drawingState, addObject, setSelectedId, setDrawingState, resetDrawing, objects } = useSceneStore();
+  const { activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects } = useSceneStore();
 
   // Refs for height tracking during drag
   const initialDragYRef = useRef<number>(0);
@@ -644,7 +644,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(lineObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         // Reset for next line segment
         setDrawingState({
           phase: 'placing',
@@ -686,7 +686,7 @@ export default function SceneCanvas() {
               visible: true,
             };
             addObject(curveObject);
-            setSelectedId(id);
+            setSelectedIds([id]);
             resetDrawing();
             return;
           }
@@ -730,7 +730,7 @@ export default function SceneCanvas() {
               visible: true,
             };
             addObject(polygonObject);
-            setSelectedId(id);
+            setSelectedIds([id]);
             resetDrawing();
             return;
           }
@@ -786,7 +786,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(cubeObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
@@ -831,7 +831,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(cylinderObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
@@ -876,7 +876,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(prismObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
@@ -913,12 +913,12 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(sphereObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
     }
-  }, [activeTool, drawingState, addObject, setSelectedId, setDrawingState, resetDrawing, objects]);
+  }, [activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects]);
 
   const handleGroundMove = useCallback((_point: [number, number, number]) => {
     // Could be used for real-time preview updates
@@ -944,7 +944,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(curveObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
@@ -965,7 +965,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(polygonObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       }
       return;
@@ -986,7 +986,7 @@ export default function SceneCanvas() {
           visible: true,
         };
         addObject(lineObject);
-        setSelectedId(id);
+        setSelectedIds([id]);
         resetDrawing();
       } else {
         // Less than 2 points - cancel drawing
@@ -1021,11 +1021,11 @@ export default function SceneCanvas() {
         visible: true,
       };
       addObject(cubeObject);
-      setSelectedId(id);
+      setSelectedIds([id]);
       resetDrawing();
       return;
     }
-  }, [activeTool, drawingState, addObject, setSelectedId, resetDrawing, objects]);
+  }, [activeTool, drawingState, addObject, setSelectedIds, resetDrawing, objects]);
 
   return (
     <div className="w-full h-full bg-[#0a0a0f]" onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>

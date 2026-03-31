@@ -17,27 +17,27 @@ export interface SceneObject {
     wireframe: boolean;
   };
   visible: boolean;
-  children?: SceneObject[];
+  children?: string[]; // Child object IDs for grouping
 }
 
-// Drawing state for each tool
 export type DrawingPhase = 'idle' | 'placing' | 'drag' | 'height';
 
 export interface DrawingState {
   phase: DrawingPhase;
-  point1: [number, number, number] | null;  // First clicked point
-  point2: [number, number, number] | null;  // Second point (for cube base)
-  height: number;                            // Height for 3D extrusions
-  polygonPoints: [number, number, number][]; // Points for polygon/line
-  controlPoints: [number, number, number][];  // Control points for curve
+  point1: [number, number, number] | null;
+  point2: [number, number, number] | null;
+  height: number;
+  polygonPoints: [number, number, number][];
+  controlPoints: [number, number, number][];
 }
 
 interface SceneState {
   objects: SceneObject[];
-  selectedId: string | null;
+  selectedIds: string[];
   activeTool: string | null;
   showGrid: boolean;
   showAxes: boolean;
+  theme: 'dark' | 'light';
 
   // Drawing state
   drawingState: DrawingState;
@@ -48,9 +48,15 @@ interface SceneState {
   removeObject: (id: string) => void;
   updateObject: (id: string, updates: Partial<SceneObject>) => void;
   setSelectedId: (id: string | null) => void;
+  toggleSelectedId: (id: string) => void;
+  setSelectedIds: (ids: string[]) => void;
+  clearSelection: () => void;
+  groupSelected: (name?: string) => void;
+  ungroupObject: (id: string) => void;
   setActiveTool: (tool: string | null) => void;
   toggleGrid: () => void;
   toggleAxes: () => void;
+  toggleTheme: () => void;
   clearScene: () => void;
 
   // Drawing actions
@@ -68,12 +74,13 @@ const initialDrawingState: DrawingState = {
   controlPoints: [],
 };
 
-export const useSceneStore = create<SceneState>((set) => ({
+export const useSceneStore = create<SceneState>((set, get) => ({
   objects: [],
-  selectedId: null,
+  selectedIds: [],
   activeTool: null,
   showGrid: true,
   showAxes: true,
+  theme: 'dark',
   drawingState: initialDrawingState,
   previewObject: null,
 
@@ -82,8 +89,11 @@ export const useSceneStore = create<SceneState>((set) => ({
   })),
 
   removeObject: (id) => set((state) => ({
-    objects: state.objects.filter((o) => o.id !== id),
-    selectedId: state.selectedId === id ? null : state.selectedId
+    objects: state.objects.filter((o) => o.id !== id).map((o) => ({
+      ...o,
+      children: o.children?.filter((c) => c !== id)
+    })),
+    selectedIds: state.selectedIds.filter((sid) => sid !== id)
   })),
 
   updateObject: (id, updates) => set((state) => ({
@@ -92,7 +102,61 @@ export const useSceneStore = create<SceneState>((set) => ({
     )
   })),
 
-  setSelectedId: (id) => set({ selectedId: id }),
+  setSelectedId: (id) => set({ selectedIds: id ? [id] : [] }),
+
+  toggleSelectedId: (id) => set((state) => {
+    const isSelected = state.selectedIds.includes(id);
+    return {
+      selectedIds: isSelected
+        ? state.selectedIds.filter((sid) => sid !== id)
+        : [...state.selectedIds, id]
+    };
+  }),
+
+  setSelectedIds: (ids) => set({ selectedIds: ids }),
+
+  clearSelection: () => set({ selectedIds: [] }),
+
+  groupSelected: (name) => set((state) => {
+    if (state.selectedIds.length < 2) return state;
+
+    const groupId = crypto.randomUUID();
+    const groupName = name || `Group_${String(state.objects.filter((o) => o.type === 'group').length + 1).padStart(2, '0')}`;
+
+    // Create group object
+    const group: SceneObject = {
+      id: groupId,
+      name: groupName,
+      type: 'group',
+      geometry: {},
+      transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      material: { color: '#94a3b8', opacity: 1, type: 'standard', wireframe: false },
+      visible: true,
+      children: [...state.selectedIds],
+    };
+
+    // Remove selected objects from top level and add group
+    const newObjects = state.objects.filter((o) => !state.selectedIds.includes(o.id)).concat(group);
+
+    return {
+      objects: newObjects,
+      selectedIds: [groupId],
+    };
+  }),
+
+  ungroupObject: (id) => set((state) => {
+    const group = state.objects.find((o) => o.id === id && o.type === 'group');
+    if (!group || !group.children?.length) return state;
+
+    // Get children and remove the group
+    const childIds = group.children;
+    const newObjects = state.objects.filter((o) => o.id !== id);
+
+    return {
+      objects: newObjects,
+      selectedIds: childIds,
+    };
+  }),
 
   setActiveTool: (tool) => set({ activeTool: tool, drawingState: initialDrawingState, previewObject: null }),
 
@@ -100,7 +164,9 @@ export const useSceneStore = create<SceneState>((set) => ({
 
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
 
-  clearScene: () => set({ objects: [], selectedId: null }),
+  toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+
+  clearScene: () => set({ objects: [], selectedIds: [] }),
 
   setDrawingState: (state) => set((prev) => ({
     drawingState: { ...prev.drawingState, ...state }

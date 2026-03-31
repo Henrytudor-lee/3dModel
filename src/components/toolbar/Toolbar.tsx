@@ -84,6 +84,24 @@ const Icons = {
       <path d="M12 2l2 3h-4l2-3z" fill="currentColor" />
     </svg>
   ),
+  sun: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  ),
+  moon: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
 };
 
 const tools = [
@@ -98,19 +116,22 @@ const tools = [
 ];
 
 export default function Toolbar() {
-  const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes } = useSceneStore();
+  const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme } = useSceneStore();
 
   const activeToolColor = tools.find(t => t.id === activeTool)?.color || '#00d9ff';
   const activeToolData = tools.find(t => t.id === activeTool);
+  const isDark = theme === 'dark';
 
   return (
-    <div className="h-12 bg-[#1a1a24] border-b border-white/5 flex items-center px-3 gap-1">
+    <div className={`h-12 border-b flex items-center px-3 gap-1 ${
+      isDark ? 'bg-[#1a1a24] border-white/5' : 'bg-[#ffffff] border-gray-200'
+    }`}>
       {/* Logo */}
-      <div className="flex items-center gap-2 mr-3 pr-3 border-r border-white/10">
+      <div className={`flex items-center gap-2 mr-3 pr-3 border-r ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
         <div className="w-7 h-7 rounded bg-gradient-to-br from-[#00d9ff] to-[#0099cc] flex items-center justify-center shadow-lg shadow-[#00d9ff]/20">
           <span className="text-white text-xs font-bold">3D</span>
         </div>
-        <span className="text-white font-semibold tracking-tight text-sm">Studio</span>
+        <span className={`font-semibold tracking-tight text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Studio</span>
       </div>
 
       {/* Tool Groups */}
@@ -198,6 +219,27 @@ export default function Toolbar() {
             />
           )}
         </button>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            isDark
+              ? 'text-[#f59e0b]'
+              : 'text-[#3b82f6]'
+          }`}
+          title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+        >
+          <div
+            className="absolute inset-0 rounded-md transition-colors duration-300"
+            style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(59, 130, 246, 0.15)' }}
+          />
+          {isDark ? <Icons.moon /> : <Icons.sun />}
+          <div
+            className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full transition-all duration-300"
+            style={{ backgroundColor: isDark ? '#f59e0b' : '#3b82f6', boxShadow: `0 0 6px ${isDark ? '#f59e0b' : '#3b82f6'}` }}
+          />
+        </button>
       </div>
 
       {/* Spacer */}
@@ -206,20 +248,22 @@ export default function Toolbar() {
       {/* Status */}
       <div className="flex items-center gap-3">
         {activeToolData && (
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/5 border border-white/10">
+          <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md border ${
+            isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'
+          }`}>
             <div
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: activeToolData.color, boxShadow: `0 0 6px ${activeToolData.color}` }}
             />
-            <span className="text-gray-300 text-xs font-medium">{activeToolData.label}</span>
+            <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-medium`}>{activeToolData.label}</span>
           </div>
         )}
 
         {/* Help hint */}
-        <div className="text-gray-600 text-xs">
-          <span className="text-gray-500">RMB</span> Confirm
-          <span className="mx-1.5 text-white/20">|</span>
-          <span className="text-gray-500">ESC</span> Cancel
+        <div className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
+          <span className={isDark ? 'text-gray-500' : 'text-gray-600'}>RMB</span> Confirm
+          <span className={`mx-1.5 ${isDark ? 'text-white/20' : 'text-black/10'}`}>|</span>
+          <span className={isDark ? 'text-gray-500' : 'text-gray-600'}>ESC</span> Cancel
         </div>
       </div>
     </div>

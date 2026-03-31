@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeProvider from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "3D Modeler - Browser-based 3D Modeling Tool",
@@ -13,8 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="h-full overflow-hidden bg-[#0a0a0f]">
-        {children}
+      <body className="h-full overflow-hidden">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
