@@ -695,7 +695,7 @@ export default function SceneCanvas() {
   const {
     activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects, theme,
     clipboard, isPasting, pastePosition, copySelected, startPaste, updatePastePosition, confirmPaste, cancelPaste,
-    undo, redo,
+    undo, redo, setActiveTool,
   } = useSceneStore();
   const isDark = theme === 'dark';
 
@@ -755,18 +755,19 @@ export default function SceneCanvas() {
         return;
       }
 
-      // Cancel paste or drawing with Escape
+      // Cancel paste or drawing with Escape - switch to select mode
       if (e.key === 'Escape') {
         if (isPasting) {
           cancelPaste();
         } else if (drawingState.phase !== 'idle') {
           resetDrawing();
         }
+        setActiveTool('select');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [drawingState.phase, resetDrawing, copySelected, clipboard, isPasting, startPaste, confirmPaste, undo, redo, cancelPaste]);
+  }, [drawingState.phase, resetDrawing, copySelected, clipboard, isPasting, startPaste, confirmPaste, undo, redo, cancelPaste, setActiveTool]);
 
   // Handle pointer down to record initial Y when entering drag phase
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
