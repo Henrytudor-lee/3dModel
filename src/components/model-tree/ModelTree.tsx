@@ -14,7 +14,6 @@ const typeColors: Record<string, string> = {
   group: '#94a3b8',
 };
 
-// SVG Icons for object types
 const TypeIcons: Record<string, () => React.ReactNode> = {
   box: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -76,17 +75,30 @@ interface ContextMenuState {
   objectId: string | null;
 }
 
-function ModelNode({ object, level = 0 }: { object: SceneObject; level?: number }) {
-  const { selectedIds, setSelectedId, toggleSelectedId, removeObject, updateObject, ungroupObject, theme } = useSceneStore();
+function ModelNode({
+  object,
+  level = 0,
+  childObjects = [],
+  isExpanded = true,
+  onToggleExpand,
+}: {
+  object: SceneObject;
+  level?: number;
+  childObjects?: SceneObject[];
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+}) {
+  const { selectedIds, setSelectedId, setSelectedIds, toggleSelectedId, removeObject, updateObject, theme } = useSceneStore();
   const isSelected = selectedIds.includes(object.id);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(object.name);
   const typeColor = typeColors[object.type] || '#94a3b8';
   const Icon = TypeIcons[object.type] || (() => <span>?</span>);
   const isDark = theme === 'dark';
+  const isGroup = object.type === 'group';
 
   const handleDoubleClick = () => {
-    if (object.type === 'group') {
+    if (isGroup) {
       setIsEditing(true);
       setEditName(object.name);
     }
@@ -98,107 +110,157 @@ function ModelNode({ object, level = 0 }: { object: SceneObject; level?: number 
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      toggleSelectedId(object.id);
+    e.stopPropagation();
+    if (isGroup) {
+      const childIds = object.children || [];
+      if (e.ctrlKey || e.metaKey) {
+        const newSelectedIds = [...selectedIds];
+        childIds.forEach(id => {
+          if (!newSelectedIds.includes(id)) {
+            newSelectedIds.push(id);
+          }
+        });
+        setSelectedIds(newSelectedIds);
+      } else {
+        setSelectedIds(childIds);
+      }
     } else {
-      setSelectedId(object.id);
-    }
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isSelected) {
-      setSelectedId(object.id);
+      if (e.ctrlKey || e.metaKey) {
+        toggleSelectedId(object.id);
+      } else {
+        setSelectedId(object.id);
+      }
     }
   };
 
   return (
-    <div
-      className="group flex items-center gap-2 h-9 px-2 cursor-pointer transition-all duration-100"
-      style={{
-        paddingLeft: `${level * 12 + 8}px`,
-        backgroundColor: isSelected ? `${typeColor}20` : 'transparent',
-        borderLeft: isSelected ? `2px solid ${typeColor}` : '2px solid transparent',
-      }}
-      onClick={handleClick}
-      onContextMenu={handleContextMenu}
-      onMouseEnter={(e) => !isSelected && (e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)')}
-      onMouseLeave={(e) => !isSelected && (e.currentTarget.style.backgroundColor = 'transparent')}
-    >
-      <span style={{ color: typeColor }}>
-        <Icon />
-      </span>
+    <>
+      <div
+        className="group flex items-center gap-2 h-9 px-2 cursor-pointer transition-all duration-100"
+        style={{
+          paddingLeft: `${level * 12 + 8}px`,
+          backgroundColor: isSelected ? `${typeColor}20` : 'transparent',
+          borderLeft: isSelected ? `2px solid ${typeColor}` : '2px solid transparent',
+        }}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onMouseEnter={(e) => !isSelected && (e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)')}
+        onMouseLeave={(e) => !isSelected && (e.currentTarget.style.backgroundColor = 'transparent')}
+      >
+        {isGroup && onToggleExpand && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+            className={`w-4 h-4 flex items-center justify-center rounded transition-colors ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-200'}`}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        )}
 
-      {isEditing ? (
-        <input
-          type="text"
-          value={editName}
-          onChange={(e) => setEditName(e.target.value)}
-          onBlur={handleNameSubmit}
-          onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
-          className={`flex-1 border rounded px-2 py-0.5 text-xs outline-none ${isDark ? 'bg-black/40 border-white/20 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-          style={{ borderColor: typeColor + '60' }}
-          autoFocus
-          onClick={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <span
-          className={`flex-1 text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-          onDoubleClick={handleDoubleClick}
-        >
-          {object.name}
+        {!isGroup && <span className="w-4" />}
+
+        <span style={{ color: typeColor }}>
+          <Icon />
         </span>
-      )}
 
-      {/* Visibility toggle */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          updateObject(object.id, { visible: !object.visible });
-        }}
-        className={`w-5 h-5 flex items-center justify-center rounded transition-all duration-100 ${
-          object.visible
-            ? isDark ? 'text-gray-500 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-white/10' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:text-gray-900 hover:bg-gray-100'
-            : isDark ? 'text-gray-600' : 'text-gray-500'
-        }`}
-        title={object.visible ? 'Hide' : 'Show'}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {object.visible ? (
-            <>
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </>
-          ) : (
-            <>
-              <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-              <line x1="1" y1="1" x2="23" y2="23" />
-            </>
-          )}
-        </svg>
-      </button>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={handleNameSubmit}
+            onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
+            className={`flex-1 border rounded px-2 py-0.5 text-xs outline-none ${isDark ? 'bg-black/40 border-white/20 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            style={{ borderColor: typeColor + '60' }}
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className={`flex-1 text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            {object.name}
+          </span>
+        )}
 
-      {/* Delete button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          removeObject(object.id);
-        }}
-        className={`w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-all duration-100 ${isDark ? 'text-gray-600 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
-        title="Delete"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-    </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            updateObject(object.id, { visible: !object.visible });
+          }}
+          className={`w-5 h-5 flex items-center justify-center rounded transition-all duration-100 ${
+            object.visible
+              ? isDark ? 'text-gray-500 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-white/10' : 'text-gray-400 opacity-0 group-hover:opacity-100 hover:text-gray-900 hover:bg-gray-100'
+              : isDark ? 'text-gray-600' : 'text-gray-500'
+          }`}
+          title={object.visible ? 'Hide' : 'Show'}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {object.visible ? (
+              <>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </>
+            ) : (
+              <>
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </>
+            )}
+          </svg>
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removeObject(object.id);
+          }}
+          className={`w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-all duration-100 ${isDark ? 'text-gray-600 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
+          title="Delete"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {isGroup && isExpanded && childObjects.map(child => (
+        <ModelNode key={child.id} object={child} level={level + 1} />
+      ))}
+    </>
   );
 }
 
 export default function ModelTree() {
   const { objects, selectedIds, setSelectedId, groupSelected, ungroupObject, theme } = useSceneStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const isDark = theme === 'dark';
+
+  // Get top-level objects (not children of any group)
+  const topLevelObjects = objects.filter(obj => {
+    // Check if this object is a child of any group
+    const isChildOfGroup = objects.some(o =>
+      o.type === 'group' && o.children?.includes(obj.id)
+    );
+    return !isChildOfGroup;
+  });
+
+  // Get children of a group
+  const getGroupChildren = (groupId: string): SceneObject[] => {
+    const group = objects.find(o => o.id === groupId);
+    if (!group?.children) return [];
+    return group.children
+      .map(childId => objects.find(o => o.id === childId))
+      .filter((o): o is SceneObject => o !== undefined);
+  };
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -223,12 +285,23 @@ export default function ModelTree() {
     closeContextMenu();
   };
 
-  const selectedObject = objects.find((o) => o.id === selectedIds[0]);
+  const toggleGroupExpand = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const selectedObject = objects.find((o) => selectedIds.includes(o.id));
 
   return (
     <div className="w-full h-full flex flex-col" onContextMenu={handleContextMenu}>
-      {/* Header */}
-      <div className={`h-9 px-3 flex items-center border-b ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-[#ffffff]'}`}>
+      <div className={`h-9 px-3 flex items-center border-b ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-white'}`}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" className="mr-2">
           <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
         </svg>
@@ -241,7 +314,6 @@ export default function ModelTree() {
         </span>
       </div>
 
-      {/* Object list */}
       <div className={`flex-1 overflow-y-auto ${isDark ? '' : 'bg-[#f8fafc]'}`} onClick={closeContextMenu}>
         {objects.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -254,19 +326,26 @@ export default function ModelTree() {
             <div className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Select a tool to begin</div>
           </div>
         ) : (
-          objects.map((obj) => (
-            <ModelNode key={obj.id} object={obj} />
-          ))
+          topLevelObjects.map((obj) => {
+            if (obj.type === 'group') {
+              return (
+                <ModelNode
+                  key={obj.id}
+                  object={obj}
+                  childObjects={getGroupChildren(obj.id)}
+                  isExpanded={expandedGroups.has(obj.id)}
+                  onToggleExpand={() => toggleGroupExpand(obj.id)}
+                />
+              );
+            }
+            return <ModelNode key={obj.id} object={obj} />;
+          })
         )}
       </div>
 
-      {/* Context Menu */}
       {contextMenu && (
         <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={closeContextMenu}
-          />
+          <div className="fixed inset-0 z-40" onClick={closeContextMenu} />
           <div
             className={`fixed z-50 border rounded-lg shadow-xl py-1 min-w-[160px] ${isDark ? 'bg-[#1a1a24] border-white/10' : 'bg-white border-gray-200'}`}
             style={{ left: contextMenu.x, top: contextMenu.y }}
