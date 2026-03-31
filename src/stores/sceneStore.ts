@@ -123,7 +123,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     const groupId = crypto.randomUUID();
     const groupName = name || `Group_${String(state.objects.filter((o) => o.type === 'group').length + 1).padStart(2, '0')}`;
 
-    // Create group object
+    // Create group object - stores references to children but keeps them in top-level
     const group: SceneObject = {
       id: groupId,
       name: groupName,
@@ -135,8 +135,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       children: [...state.selectedIds],
     };
 
-    // Remove selected objects from top level and add group
-    const newObjects = state.objects.filter((o) => !state.selectedIds.includes(o.id)).concat(group);
+    // Add group to top-level objects (children stay in array for rendering)
+    const newObjects = [...state.objects, group];
 
     return {
       objects: newObjects,
@@ -148,7 +148,7 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     const group = state.objects.find((o) => o.id === id && o.type === 'group');
     if (!group || !group.children?.length) return state;
 
-    // Get children and remove the group
+    // Just remove the group, children remain in top-level
     const childIds = group.children;
     const newObjects = state.objects.filter((o) => o.id !== id);
 
