@@ -68,6 +68,22 @@ const Icons = {
       <circle cx="15" cy="15" r="6" opacity="0.3" />
     </svg>
   ),
+  grid: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  ),
+  axes: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M12 2v20" />
+      <path d="M2 12h20" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2l2 3h-4l2-3z" fill="currentColor" />
+    </svg>
+  ),
 };
 
 const tools = [
@@ -138,21 +154,49 @@ export default function Toolbar() {
       <div className="flex items-center gap-0.5">
         <button
           onClick={toggleGrid}
-          className={`w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 text-xs font-medium tracking-wide ${
-            showGrid ? 'text-[#00d9ff]' : 'text-gray-600 hover:text-gray-400'
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            showGrid
+              ? 'text-[#00d9ff]'
+              : 'text-gray-600 hover:text-gray-400'
           }`}
           title="Toggle Grid (G)"
         >
-          GRID
+          {showGrid && (
+            <div
+              className="absolute inset-0 rounded-md"
+              style={{ backgroundColor: 'rgba(0, 217, 255, 0.15)' }}
+            />
+          )}
+          <Icons.grid />
+          {showGrid && (
+            <div
+              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+              style={{ backgroundColor: '#00d9ff', boxShadow: '0 0 6px #00d9ff' }}
+            />
+          )}
         </button>
         <button
           onClick={toggleAxes}
-          className={`w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 text-xs font-medium tracking-wide ${
-            showAxes ? 'text-[#00d9ff]' : 'text-gray-600 hover:text-gray-400'
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            showAxes
+              ? 'text-[#22c55e]'
+              : 'text-gray-600 hover:text-gray-400'
           }`}
           title="Toggle Axes (A)"
         >
-          AXES
+          {showAxes && (
+            <div
+              className="absolute inset-0 rounded-md"
+              style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)' }}
+            />
+          )}
+          <Icons.axes />
+          {showAxes && (
+            <div
+              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+              style={{ backgroundColor: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
+            />
+          )}
         </button>
       </div>
 
