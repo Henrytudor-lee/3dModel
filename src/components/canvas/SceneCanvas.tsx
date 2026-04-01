@@ -29,7 +29,7 @@ function AxesHelper({ size }: { size: number }) {
 function SceneObject3D({ object, isSelected, onClick }: {
   object: SceneObject;
   isSelected: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
 }) {
   const { geometry, material, transform, type } = object;
 
@@ -696,7 +696,16 @@ function SceneContent({
           key={obj.id}
           object={obj}
           isSelected={selectedIds.includes(obj.id)}
-          onClick={() => setSelectedIds([obj.id])}
+          onClick={(e) => {
+            if (e.ctrlKey || e.metaKey) {
+              // Multi-select with Ctrl/Cmd+click
+              e.stopPropagation();
+              const { toggleSelectedId } = useSceneStore.getState();
+              toggleSelectedId(obj.id);
+            } else {
+              setSelectedIds([obj.id]);
+            }
+          }}
         />
       ))}
     </>

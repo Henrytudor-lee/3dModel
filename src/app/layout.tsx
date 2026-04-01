@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "3D Modeler - Browser-based 3D Modeling Tool",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="h-full overflow-hidden">
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
