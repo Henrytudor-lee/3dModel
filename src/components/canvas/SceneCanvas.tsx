@@ -171,18 +171,30 @@ function SceneObject3D({ object, isSelected, onClick }: {
     }
     shape.closePath();
     const extrudeSettings = { depth: 0.01, bevelEnabled: false };
+
+    // Create geometry for edges
+    const edgesGeometry = new THREE.EdgesGeometry(new THREE.ExtrudeGeometry(shape, extrudeSettings));
+
     // Position at centroid and rotate +90 degrees around X to lay flat (not mirrored)
     return (
-      <mesh position={[centroidX, 0.005, centroidZ]} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale} onClick={onClick}>
-        <extrudeGeometry args={[shape, extrudeSettings]} />
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      <group position={[centroidX, 0.005, centroidZ]} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale}>
+        <mesh onClick={onClick}>
+          <extrudeGeometry args={[shape, extrudeSettings]} />
+          <meshStandardMaterial
+            color={material.color}
+            opacity={material.opacity}
+            transparent={material.opacity < 1}
+            wireframe={material.wireframe}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+        {isSelected && (
+          <lineSegments>
+            <primitive object={edgesGeometry} />
+            <lineBasicMaterial color="#00d9ff" linewidth={2} />
+          </lineSegments>
+        )}
+      </group>
     );
   }
 
