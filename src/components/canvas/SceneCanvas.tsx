@@ -63,6 +63,60 @@ function AxesHelper({ size }: { size: number }) {
   );
 }
 
+// Get material JSX based on material type
+function getMaterial(material: SceneObject['material']) {
+  const { color, opacity, type, wireframe } = material;
+  const transparent = opacity < 1;
+
+  switch (type) {
+    case 'metal':
+      return (
+        <meshStandardMaterial
+          color={color}
+          metalness={1}
+          roughness={0.3}
+          opacity={opacity}
+          transparent={transparent}
+          wireframe={wireframe}
+        />
+      );
+    case 'glass':
+      return (
+        <meshPhysicalMaterial
+          color={color}
+          metalness={0}
+          roughness={0}
+          transmission={0.9}
+          thickness={0.5}
+          opacity={opacity}
+          transparent={true}
+          wireframe={wireframe}
+        />
+      );
+    case 'emissive':
+      return (
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={2}
+          opacity={opacity}
+          transparent={transparent}
+          wireframe={wireframe}
+        />
+      );
+    case 'standard':
+    default:
+      return (
+        <meshStandardMaterial
+          color={color}
+          opacity={opacity}
+          transparent={transparent}
+          wireframe={wireframe}
+        />
+      );
+  }
+}
+
 // Render any scene object
 function SceneObject3D({ object, isSelected, onClick }: {
   object: SceneObject;
@@ -85,12 +139,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
           (geometry.height as number) || 1,
           (geometry.depth as number) || 1
         ]} />
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-        />
+        {getMaterial(material)}
         {isSelected && (
           <lineSegments>
             <edgesGeometry args={[new THREE.BoxGeometry(
@@ -109,12 +158,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
     return (
       <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
         <sphereGeometry args={[(geometry.radius as number) || 0.5, 32, 32]} />
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-        />
+        {getMaterial(material)}
         {isSelected && (
           <lineSegments>
             <edgesGeometry args={[new THREE.SphereGeometry((geometry.radius as number) || 0.5, 16, 16)]} />
@@ -134,12 +178,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
           (geometry.height as number) || 1,
           32
         ]} />
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-        />
+        {getMaterial(material)}
         {isSelected && (
           <lineSegments>
             <edgesGeometry args={[new THREE.CylinderGeometry(
@@ -161,12 +200,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
     return (
       <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
         <cylinderGeometry args={[radius, radius, (geometry.height as number) || 1, sides]} />
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-        />
+        {getMaterial(material)}
         {isSelected && (
           <lineSegments>
             <edgesGeometry args={[new THREE.CylinderGeometry(radius, radius, (geometry.height as number) || 1, sides)]} />
@@ -218,13 +252,31 @@ function SceneObject3D({ object, isSelected, onClick }: {
       <group position={[centroidX, 0.005, centroidZ]} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale}>
         <mesh onClick={onClick}>
           <extrudeGeometry args={[shape, extrudeSettings]} />
-          <meshStandardMaterial
-            color={material.color}
-            opacity={material.opacity}
-            transparent={material.opacity < 1}
-            wireframe={material.wireframe}
-            side={THREE.DoubleSide}
-          />
+          {material.type === 'glass' ? (
+            <meshPhysicalMaterial
+              color={material.color}
+              metalness={0}
+              roughness={0}
+              transmission={0.9}
+              thickness={0.5}
+              opacity={material.opacity}
+              transparent={true}
+              wireframe={material.wireframe}
+              side={THREE.DoubleSide}
+            />
+          ) : (
+            <meshStandardMaterial
+              color={material.color}
+              emissive={material.type === 'emissive' ? material.color : '#000000'}
+              emissiveIntensity={material.type === 'emissive' ? 2 : 0}
+              metalness={material.type === 'metal' ? 1 : 0}
+              roughness={material.type === 'metal' ? 0.3 : 0.5}
+              opacity={material.opacity}
+              transparent={material.opacity < 1}
+              wireframe={material.wireframe}
+              side={THREE.DoubleSide}
+            />
+          )}
         </mesh>
         {isSelected && (
           <lineSegments>
@@ -269,12 +321,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
 
     return (
       <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick} geometry={meshGeometry}>
-        <meshStandardMaterial
-          color={material.color}
-          opacity={material.opacity}
-          transparent={material.opacity < 1}
-          wireframe={material.wireframe}
-        />
+        {getMaterial(material)}
         {isSelected && (
           <lineSegments>
             <edgesGeometry args={[meshGeometry]} />
