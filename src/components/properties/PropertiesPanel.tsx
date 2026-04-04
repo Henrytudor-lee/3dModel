@@ -28,15 +28,15 @@ export default function PropertiesPanel() {
 
   if (!selectedObject) {
     return (
-      <div className={`w-full border-t ${isDark ? 'bg-[#12121a] border-white/5' : 'bg-gray-50 border-gray-200'}`}>
-        <div className={`h-9 px-3 flex items-center border-b ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-white'}`}>
+      <div className={`w-full h-full flex flex-col border-t ${isDark ? 'bg-[#12121a] border-white/5' : 'bg-gray-50 border-gray-200'}`}>
+        <div className={`h-9 px-3 flex items-center border-b flex-shrink-0 ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-white'}`}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" className="mr-2">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
           </svg>
           <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Properties</span>
         </div>
-        <div className={`flex flex-col items-center justify-center h-32 text-center px-4`}>
+        <div className={`flex-1 flex flex-col items-center justify-center text-center px-4`}>
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#4a5568' : '#9ca3af'} strokeWidth="1.5">
               <path d="M15 15L21 21M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
@@ -74,9 +74,9 @@ export default function PropertiesPanel() {
   };
 
   return (
-    <div className={`w-full border-t ${isDark ? 'bg-[#12121a] border-white/5' : 'bg-white border-gray-200'}`}>
+    <div className={`w-full h-full flex flex-col border-t ${isDark ? 'bg-[#12121a] border-white/5' : 'bg-white border-gray-200'}`}>
       {/* Header */}
-      <div className={`h-9 px-3 flex items-center border-b ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-gray-50'}`} style={{ borderTop: `2px solid ${typeColor}` }}>
+      <div className={`h-9 px-3 flex items-center border-b flex-shrink-0 ${isDark ? 'border-white/5 bg-[#1a1a24]' : 'border-gray-200 bg-gray-50'}`} style={{ borderTop: `2px solid ${typeColor}` }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" className="mr-2">
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -91,7 +91,7 @@ export default function PropertiesPanel() {
       </div>
 
       {/* Content */}
-      <div className={`p-3 space-y-4 overflow-y-auto max-h-80 ${isDark ? '' : 'bg-white'}`}>
+      <div className={`flex-1 overflow-y-auto p-3 space-y-4 ${isDark ? '' : 'bg-white'}`}>
         {/* Name */}
         <div>
           <label className={`block text-[10px] mb-1.5 font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Name</label>
@@ -166,9 +166,9 @@ export default function PropertiesPanel() {
 
           {/* Position */}
           <div className="mb-3">
-            <div className="flex items-center gap-1 mb-1.5">
+            <div className="grid grid-cols-3 gap-1.5 mb-1.5">
               {['X', 'Y', 'Z'].map((axis) => (
-                <span key={axis} className="text-[10px] font-bold w-8 text-center" style={{ color: axisColors[axis as keyof typeof axisColors] }}>
+                <span key={axis} className="text-[10px] font-bold text-center" style={{ color: axisColors[axis as keyof typeof axisColors] }}>
                   {axis}
                 </span>
               ))}
@@ -191,7 +191,10 @@ export default function PropertiesPanel() {
 
           {/* Rotation */}
           <div className="mb-3">
-            <div className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>Rotation</div>
+            <div className={`text-[10px] mb-1.5 flex items-center gap-1 ${isDark ? 'text-gray-600' : 'text-gray-500'}`}>
+              <span>Rotation</span>
+              <span className={`text-[9px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>(rad)</span>
+            </div>
             <div className="grid grid-cols-3 gap-1.5">
               {['X', 'Y', 'Z'].map((axis, i) => (
                 <input

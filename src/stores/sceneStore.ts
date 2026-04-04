@@ -1,10 +1,13 @@
 import { create } from 'zustand';
+import * as THREE from 'three';
+import { performCSGOperationAsync, getDefaultMaterial } from '@/utils/csg';
 
 export interface SceneObject {
   id: string;
   name: string;
-  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'group';
+  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'group' | 'csgresult';
   geometry: Record<string, number | number[]>;
+  meshGeometry?: THREE.BufferGeometry; // For storing generated CSG geometry
   transform: {
     position: [number, number, number];
     rotation: [number, number, number];
@@ -40,7 +43,8 @@ export type OperationType =
   | 'PASTE'
   | 'GROUP'
   | 'UNGROUP'
-  | 'MOVE';
+  | 'MOVE'
+  | 'CSG';
 
 // Operation record
 export interface Operation {
@@ -108,6 +112,9 @@ interface SceneState {
 
   // Helper
   executeWithHistory: <T>(fn: () => T, description: string, operationType: OperationType) => T;
+
+  // Boolean operations
+  booleanOperation: (operation: 'union' | 'intersect' | 'subtract') => void;
 }
 
 const initialDrawingState: DrawingState = {
@@ -400,6 +407,18 @@ export const useSceneStore = create<SceneState>((set, get) => ({
         }
         break;
       }
+      case 'CSG': {
+        // Undo CSG = remove result, restore original objects
+        // objectIds = [obj1.id, obj2.id, result.id]
+        // Remove the result object (last id)
+        const resultId = operation.objectIds[operation.objectIds.length - 1];
+        newObjects = newObjects.filter((o) => o.id !== resultId);
+        // Restore original objects
+        if (operation.beforeState) {
+          newObjects = [...newObjects, ...operation.beforeState];
+        }
+        break;
+      }
     }
 
     set({
@@ -459,6 +478,17 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       }
       case 'PASTE': {
         // Redo paste = paste again
+        if (operation.afterState) {
+          newObjects = [...newObjects, ...operation.afterState];
+        }
+        break;
+      }
+      case 'CSG': {
+        // Redo CSG = remove originals, add result
+        // objectIds = [obj1.id, obj2.id, result.id]
+        // Remove original objects
+        newObjects = newObjects.filter((o) => o.id !== operation.objectIds[0] && o.id !== operation.objectIds[1]);
+        // Add result
         if (operation.afterState) {
           newObjects = [...newObjects, ...operation.afterState];
         }
@@ -587,4 +617,85 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     fn(); // Currently just executes - history tracking done in individual methods
     return fn();
   },
+
+  booleanOperation: async (operation) => {
+    const state = get();
+    if (state.selectedIds.length !== 2) {
+      console.warn('Boolean operation requires exactly 2 selected objects');
+      return;
+    }
+
+    const obj1 = state.objects.find((o) => o.id === state.selectedIds[0]);
+    const obj2 = state.objects.find((o) => o.id === state.selectedIds[1]);
+
+    if (!obj1 || !obj2) return;
+
+    // Check if objects support CSG
+    const csgTypes = ['box', 'sphere', 'cylinder', 'prism'];
+    if (!csgTypes.includes(obj1.type) || !csgTypes.includes(obj2.type)) {
+      console.warn('CSG operations only supported for box, sphere, cylinder, and prism');
+      return;
+    }
+
+    try {
+      const csgResult = await performCSGOperationAsync(obj1, obj2, operation);
+      const resultMaterial = getDefaultMaterial(obj1);
+
+      // The CSG result geometry from three-bvh-csg is already in world space
+      // (transforms are baked into vertex positions)
+      // We just need to use the bounding box center as the result position
+      const resultGeometry = csgResult.geometry;
+
+      // The result geometry is already in world space (transforms baked in)
+      // So we use identity transform - the geometry position IS the position
+      const resultObj: SceneObject = {
+        id: crypto.randomUUID(),
+        name: `CSG_${operation}_${Date.now()}`,
+        type: 'csgresult',
+        geometry: {},
+        meshGeometry: resultGeometry,
+        transform: {
+          position: [0, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1]
+        },
+        material: resultMaterial,
+        visible: true,
+      };
+
+      // Store original objects for undo
+      const obj1Clone = deepClone(obj1);
+      const obj2Clone = deepClone(obj2);
+      const resultObjClone = deepClone(resultObj);
+
+      const op = createOperation(
+        'CSG',
+        `CSG ${operation} of ${obj1.name} and ${obj2.name}`,
+        [obj1.id, obj2.id, resultObj.id],
+        [obj1Clone, obj2Clone],
+        [resultObjClone]
+      );
+
+      const newHistory = state.history.slice(0, state.historyIndex + 1);
+      newHistory.push(op);
+
+      // Remove original objects and add result
+      set({
+        objects: [
+          ...state.objects.filter(o => o.id !== obj1.id && o.id !== obj2.id),
+          resultObj
+        ],
+        selectedIds: [resultObj.id],
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+      });
+    } catch (error) {
+      console.error('CSG operation failed:', error);
+    }
+  },
 }));
+
+// Expose store to window for testing
+if (typeof window !== 'undefined') {
+  (window as any).__ZUSTAND_STORE__ = useSceneStore;
+}

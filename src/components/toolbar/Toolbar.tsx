@@ -62,6 +62,14 @@ const Icons = {
       <circle cx="15" cy="15" r="6" opacity="0.7" />
     </svg>
   ),
+  intersect: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="9" r="6" opacity="0.3" />
+      <circle cx="15" cy="15" r="6" opacity="0.3" />
+      <path d="M9 5.5a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3.5 5.5L9 14.5z" opacity="0.9" fill="currentColor" />
+      <path d="M15 9.5a6 6 0 0 1-6 6c-2.5 0-4.5-1.5-5.5-3.5L6 9.5z" opacity="0.9" fill="currentColor" />
+    </svg>
+  ),
   subtract: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <circle cx="9" cy="9" r="6" opacity="0.7" />
@@ -116,11 +124,12 @@ const tools = [
 ];
 
 export default function Toolbar() {
-  const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme } = useSceneStore();
+  const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme, selectedIds, booleanOperation } = useSceneStore();
 
   const activeToolColor = tools.find(t => t.id === activeTool)?.color || '#00d9ff';
   const activeToolData = tools.find(t => t.id === activeTool);
   const isDark = theme === 'dark';
+  const canPerformCSG = selectedIds.length === 2;
 
   return (
     <div className={`h-12 border-b flex items-center px-3 gap-1 ${
@@ -145,8 +154,8 @@ export default function Toolbar() {
               onClick={() => setActiveTool(isActive ? null : tool.id)}
               className={`relative w-9 h-9 flex items-center justify-center rounded-md transition-all duration-150 ${
                 isActive
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  ? isDark ? 'text-white' : 'text-gray-900'
+                  : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
               }`}
               title={tool.label}
             >
@@ -171,6 +180,49 @@ export default function Toolbar() {
       {/* Divider */}
       <div className="w-px h-6 bg-white/10 mx-2" />
 
+      {/* CSG Operations */}
+      <div className="flex items-center gap-0.5">
+        <button
+          onClick={() => booleanOperation('union')}
+          disabled={!canPerformCSG}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            canPerformCSG
+              ? isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700/30 cursor-not-allowed'
+          }`}
+          title="Union (select 2 objects)"
+        >
+          <Icons.union />
+        </button>
+        <button
+          onClick={() => booleanOperation('subtract')}
+          disabled={!canPerformCSG}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            canPerformCSG
+              ? isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700/30 cursor-not-allowed'
+          }`}
+          title="Subtract (select 2 objects)"
+        >
+          <Icons.subtract />
+        </button>
+        <button
+          onClick={() => booleanOperation('intersect')}
+          disabled={!canPerformCSG}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            canPerformCSG
+              ? isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              : 'text-gray-700/30 cursor-not-allowed'
+          }`}
+          title="Intersect (select 2 objects)"
+        >
+          <Icons.intersect />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-white/10 mx-2" />
+
       {/* View Controls */}
       <div className="flex items-center gap-0.5">
         <button
@@ -178,7 +230,7 @@ export default function Toolbar() {
           className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
             showGrid
               ? 'text-[#00d9ff]'
-              : 'text-gray-600 hover:text-gray-400'
+              : isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-500 hover:text-gray-700'
           }`}
           title="Toggle Grid (G)"
         >
@@ -201,7 +253,7 @@ export default function Toolbar() {
           className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
             showAxes
               ? 'text-[#22c55e]'
-              : 'text-gray-600 hover:text-gray-400'
+              : isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-500 hover:text-gray-700'
           }`}
           title="Toggle Axes (A)"
         >

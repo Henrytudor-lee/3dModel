@@ -1,26 +1,64 @@
 'use client';
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas, ThreeEvent, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Line } from '@react-three/drei';
-import { useSceneStore, SceneObject } from '@/stores/sceneStore';
 import * as THREE from 'three';
+import { useSceneStore, SceneObject } from '@/stores/sceneStore';
+
+// Create a sprite-based label
+function AxisLabel({ text, color, position }: { text: string; color: string; position: [number, number, number] }) {
+  const spriteRef = useRef<THREE.Sprite>(null);
+
+  // Create canvas-based texture for the label
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = 'bold 48px Arial, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 32, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }, [text, color]);
+
+  return (
+    <sprite ref={spriteRef} position={position} scale={[0.5, 0.5, 0.5]}>
+      <spriteMaterial map={texture} transparent depthTest={false} />
+    </sprite>
+  );
+}
 
 function AxesHelper({ size }: { size: number }) {
+  // Label offset from axis end
+  const labelOffset = 0.3;
   return (
     <group>
+      {/* X axis (red) - extends from 0 to size */}
       <mesh position={[size / 2, 0, 0]}>
         <boxGeometry args={[size, 0.05, 0.05]} />
-        <meshBasicMaterial color="red" />
+        <meshBasicMaterial color="#ef4444" />
       </mesh>
+      <AxisLabel text="X" color="#ef4444" position={[size + labelOffset, 0, 0]} />
+
+      {/* Y axis (green) - extends from 0 to size */}
       <mesh position={[0, size / 2, 0]}>
         <boxGeometry args={[0.05, size, 0.05]} />
-        <meshBasicMaterial color="green" />
+        <meshBasicMaterial color="#22c55e" />
       </mesh>
+      <AxisLabel text="Y" color="#22c55e" position={[0, size + labelOffset, 0]} />
+
+      {/* Z axis (blue) - extends from 0 to size */}
       <mesh position={[0, 0, size / 2]}>
         <boxGeometry args={[0.05, 0.05, size]} />
-        <meshBasicMaterial color="blue" />
+        <meshBasicMaterial color="#3b82f6" />
       </mesh>
+      <AxisLabel text="Z" color="#3b82f6" position={[0, 0, size + labelOffset]} />
     </group>
   );
 }
@@ -222,6 +260,28 @@ function SceneObject3D({ object, isSelected, onClick }: {
         lineWidth={2}
         onClick={onClick}
       />
+    );
+  }
+
+  if (type === 'csgresult') {
+    const meshGeometry = object.meshGeometry;
+    if (!meshGeometry) return null;
+
+    return (
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick} geometry={meshGeometry}>
+        <meshStandardMaterial
+          color={material.color}
+          opacity={material.opacity}
+          transparent={material.opacity < 1}
+          wireframe={material.wireframe}
+        />
+        {isSelected && (
+          <lineSegments>
+            <edgesGeometry args={[meshGeometry]} />
+            <lineBasicMaterial color="#00d9ff" linewidth={2} />
+          </lineSegments>
+        )}
+      </mesh>
     );
   }
 
@@ -671,10 +731,12 @@ function SceneContent({
       />
 
       {/* Grid */}
-      {showGrid && <Grid args={[20, 20]} cellSize={1} cellColor="#333" sectionSize={5} sectionColor="#555" fadeDistance={50} />}
+      <Grid args={[20, 20]} cellSize={1} cellColor="#333" sectionSize={5} sectionColor="#555" fadeDistance={50} visible={showGrid} />
 
       {/* Axes */}
-      {showAxes && <AxesHelper size={5} />}
+      <group visible={showAxes}>
+        <AxesHelper size={5} />
+      </group>
 
       {/* Ground plane for click detection */}
       <GroundPlane onClick={onGroundClick} onMove={handleMouseMove} />
@@ -697,9 +759,9 @@ function SceneContent({
           object={obj}
           isSelected={selectedIds.includes(obj.id)}
           onClick={(e) => {
+            e.stopPropagation(); // Always stop propagation to prevent ground click
             if (e.ctrlKey || e.metaKey) {
               // Multi-select with Ctrl/Cmd+click
-              e.stopPropagation();
               const { toggleSelectedId } = useSceneStore.getState();
               toggleSelectedId(obj.id);
             } else {
@@ -716,7 +778,7 @@ export default function SceneCanvas() {
   const {
     activeTool, drawingState, addObject, setSelectedIds, setDrawingState, resetDrawing, objects, theme,
     clipboard, isPasting, pastePosition, copySelected, startPaste, updatePastePosition, confirmPaste, cancelPaste,
-    undo, redo, setActiveTool,
+    undo, redo, setActiveTool, clearSelection,
   } = useSceneStore();
   const isDark = theme === 'dark';
 
@@ -806,7 +868,11 @@ export default function SceneCanvas() {
       return;
     }
 
-    if (!activeTool || activeTool === 'select') return;
+    // When in select mode or no tool, clicking ground deselects all
+    if (!activeTool || activeTool === 'select') {
+      clearSelection();
+      return;
+    }
 
     const tool = activeTool;
 
@@ -1220,6 +1286,9 @@ export default function SceneCanvas() {
     <div className={`w-full h-full ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f0f4f8]'}`} onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 50 }}
+        onCreated={({ scene }) => {
+          scene.background = new THREE.Color(theme === 'dark' ? '#0a0a0f' : '#f0f4f8');
+        }}
       >
         <SceneContent onGroundClick={handleGroundClick} onGroundMove={handleGroundMove} />
       </Canvas>

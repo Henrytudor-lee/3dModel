@@ -5,6 +5,7 @@ import Toolbar from '@/components/toolbar/Toolbar';
 import ModelTree from '@/components/model-tree/ModelTree';
 import PropertiesPanel from '@/components/properties/PropertiesPanel';
 import { useSceneStore } from '@/stores/sceneStore';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 // Dynamic import for Three.js canvas (client-side only)
 const SceneCanvas = dynamic(() => import('@/components/canvas/SceneCanvas'), {
@@ -58,6 +59,49 @@ export default function Home() {
   const hint = getDrawingHint(activeTool, drawingState.phase);
   const isDark = theme === 'dark';
 
+  // Vertical divider between ModelTree and PropertiesPanel
+  const [modelTreeHeight, setModelTreeHeight] = useState(280);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizingRef = useRef(false);
+  const panelTopRef = useRef(0);
+
+  const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    resizingRef.current = true;
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  const handleVerticalMouseMove = useCallback((e: MouseEvent) => {
+    if (!resizingRef.current) return;
+    const containerRect = document.getElementById('left-panel')?.getBoundingClientRect();
+    if (!containerRect) return;
+    const relativeY = e.clientY - containerRect.top;
+    const newHeight = Math.max(120, Math.min(containerRect.height - 100, relativeY));
+    setModelTreeHeight(newHeight);
+  }, []);
+
+  const handleVerticalMouseUp = useCallback(() => {
+    if (resizingRef.current) {
+      setIsResizing(false);
+      resizingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', handleVerticalMouseMove);
+      window.addEventListener('mouseup', handleVerticalMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleVerticalMouseMove);
+        window.removeEventListener('mouseup', handleVerticalMouseUp);
+      };
+    }
+  }, [isResizing, handleVerticalMouseMove, handleVerticalMouseUp]);
+
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f8fafc]'}`}>
       {/* Top Toolbar */}
@@ -66,11 +110,34 @@ export default function Home() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Model Tree + Properties */}
-        <div className={`w-[280px] flex flex-col border-r ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
-          <div className="flex-1 overflow-hidden">
+        <div
+          id="left-panel"
+          className={`w-[280px] flex flex-col border-r flex-shrink-0 ${isDark ? 'border-white/5' : 'border-gray-200'}`}
+        >
+          {/* Model Tree with dynamic height */}
+          <div
+            className="overflow-hidden"
+            style={{ height: modelTreeHeight }}
+          >
             <ModelTree />
           </div>
-          <PropertiesPanel />
+
+          {/* Horizontal Resizable Divider */}
+          <div
+            className={`h-1 cursor-row-resize flex-shrink-0 transition-colors ${
+              isResizing
+                ? 'bg-[#00d9ff]'
+                : isDark
+                  ? 'bg-white/5 hover:bg-white/20'
+                  : 'bg-gray-200 hover:bg-gray-400'
+            }`}
+            onMouseDown={handleVerticalMouseDown}
+          />
+
+          {/* Properties Panel */}
+          <div className="flex-1 overflow-hidden">
+            <PropertiesPanel />
+          </div>
         </div>
 
         {/* Right Panel - 3D Canvas */}
