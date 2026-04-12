@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
+import { Icons } from '@/components/ui/Icons';
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -73,12 +74,6 @@ export default function ProjectsPage() {
           >
             Sign Out
           </button>
-          <Link
-            href="/app"
-            className="bg-[#00e5ff] text-[#00363d] px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all"
-          >
-            New Project
-          </Link>
         </div>
       </nav>
 
@@ -91,7 +86,7 @@ export default function ProjectsPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icons.search /></span>
               <input
                 className="bg-[#131b2e] border border-[#3b494c]/20 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-[#00e5ff]/50 w-64"
                 placeholder="Search projects..."
@@ -109,7 +104,7 @@ export default function ProjectsPage() {
             className="group border-2 border-dashed border-[#3b494c]/30 rounded-3xl p-5 hover:border-[#00e5ff]/50 hover:bg-[#00e5ff]/5 transition-all flex flex-col items-center justify-center min-h-[300px]"
           >
             <div className="w-16 h-16 rounded-full bg-[#222a3d] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <span className="text-[#00e5ff] text-3xl">+</span>
+              <span className="text-[#00e5ff]"><Icons.plus /></span>
             </div>
             <h3 className="text-slate-300 font-bold mb-1">Create New Project</h3>
             <p className="text-slate-500 text-sm">Start from a blank canvas</p>
@@ -123,9 +118,17 @@ export default function ProjectsPage() {
               className="group bg-[#171f33] border border-[#3b494c]/10 rounded-3xl p-5 hover:border-[#00e5ff]/30 transition-all duration-300 flex flex-col h-full cursor-pointer"
             >
               <div className="relative aspect-video rounded-2xl overflow-hidden mb-5 bg-[#060e20]">
-                <div className="w-full h-full flex items-center justify-center text-slate-600">
-                  <span className="text-4xl">📦</span>
-                </div>
+                {project.thumbnail ? (
+                  <img
+                    src={project.thumbnail}
+                    alt={project.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-600">
+                    <Icons.box />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                   <button className="w-full bg-[#00e5ff] text-[#00363d] py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
                     Open Workspace
@@ -148,7 +151,7 @@ export default function ProjectsPage() {
                     className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                     title="Delete project"
                   >
-                    🗑️
+                    <Icons.delete />
                   </button>
                 </div>
               </div>
@@ -170,7 +173,7 @@ export default function ProjectsPage() {
         {/* Empty State */}
         {projects.length === 0 && !projectsLoading && (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">🎨</div>
+            <div className="mb-4 flex justify-center text-slate-500"><Icons.palette /></div>
             <h3 className="text-xl font-bold text-slate-100 mb-2">No projects yet</h3>
             <p className="text-[#bac9cc] mb-6">Create your first project to get started</p>
             <button

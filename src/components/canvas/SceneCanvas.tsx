@@ -1407,11 +1407,36 @@ export default function SceneCanvas() {
     }
   }, [activeTool, drawingState, addObject, setSelectedIds, resetDrawing, objects]);
 
+  // Ref for Three.js renderer and scene
+  const glRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.Camera | null>(null);
+
+  // Expose screenshot function globally
+  useEffect(() => {
+    (window as any).__captureCanvasScreenshot = () => {
+      if (!glRef.current || !sceneRef.current || !cameraRef.current) return null;
+      try {
+        const renderer = glRef.current;
+        // Force render one frame to capture current state
+        renderer.render(sceneRef.current, cameraRef.current);
+        const canvas = renderer.domElement;
+        return canvas.toDataURL('image/jpeg', 0.8);
+      } catch (e) {
+        console.error('Screenshot failed:', e);
+        return null;
+      }
+    };
+  }, []);
+
   return (
     <div className={`w-full h-full ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f0f4f8]'}`} onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 50 }}
-        onCreated={({ gl, scene }) => {
+        onCreated={({ gl, scene, camera }) => {
+          glRef.current = gl;
+          sceneRef.current = scene;
+          cameraRef.current = camera;
           scene.background = new THREE.Color(theme === 'dark' ? '#0a0a0f' : '#f0f4f8');
         }}
       >

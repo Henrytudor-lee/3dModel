@@ -16,7 +16,7 @@ interface ProjectState {
   updateProject: (id: string, updates: Partial<ModelProject>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   setCurrentProject: (project: ModelProject | null) => void;
-  saveSceneData: (sceneData: SceneData) => Promise<void>;
+  saveSceneData: (sceneData: SceneData, settings?: { showGrid?: boolean; showAxes?: boolean; theme?: 'dark' | 'light' }) => Promise<void>;
   loadSceneData: (projectId: string) => Promise<SceneData | null>;
 }
 
@@ -171,7 +171,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ currentProject: project });
   },
 
-  saveSceneData: async (sceneData) => {
+  saveSceneData: async (sceneData, settings) => {
     if (!supabase) return;
 
     const { currentProject } = get();
@@ -182,10 +182,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     set({ saving: true });
 
+    // Capture screenshot
+    const thumbnail = (window as any).__captureCanvasScreenshot?.() || null;
+
+    // Merge settings with existing project settings
+    const currentSettings = currentProject.settings || {};
+    const newSettings = { ...currentSettings, ...settings };
+
     const { error } = await supabase
       .from('ModelProjects')
       .update({
         scene_data: sceneData,
+        settings: newSettings,
+        thumbnail,
         updated_at: new Date().toISOString(),
       })
       .eq('id', currentProject.id);
@@ -200,11 +209,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       saving: false,
       projects: state.projects.map((p) =>
         p.id === currentProject.id
-          ? { ...p, scene_data: sceneData, updated_at: new Date().toISOString() }
+          ? { ...p, scene_data: sceneData, settings: newSettings, thumbnail, updated_at: new Date().toISOString() }
           : p
       ),
       currentProject: state.currentProject
-        ? { ...state.currentProject, scene_data: sceneData, updated_at: new Date().toISOString() }
+        ? { ...state.currentProject, scene_data: sceneData, settings: newSettings, thumbnail, updated_at: new Date().toISOString() }
         : null,
     }));
   },

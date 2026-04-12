@@ -190,6 +190,7 @@ interface SceneState {
   toggleGrid: () => void;
   toggleAxes: () => void;
   toggleTheme: () => void;
+  setTheme: (theme: 'dark' | 'light') => void;
   clearScene: () => void;
 
   // Drawing actions
@@ -474,6 +475,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
 
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+
+  setTheme: (theme) => set({ theme }),
 
   clearScene: () => set({
     objects: [],

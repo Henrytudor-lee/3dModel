@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import Link from 'next/link';
+import { Icons } from '@/components/ui/Icons';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (initialized && !loading) {
       if (user || isGuest) {
-        router.push('/projects');
+        router.push(isGuest ? '/app' : '/projects');
       }
     }
   }, [initialized, loading, user, isGuest, router]);
@@ -57,13 +58,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-sans">
       {/* TopNavBar */}
       <nav className="bg-[#0b1326]/80 backdrop-blur-xl border-b border-[#3b494c]/10 text-[#00e5ff] font-medium flex justify-between items-center w-full px-8 h-16 fixed top-0 z-50">
-        <img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
-        <div className="hidden md:flex items-center gap-8">
-          <a className="text-slate-400 hover:text-[#00e5ff] transition-colors" href="#">Products</a>
-          <a className="text-slate-100 hover:text-[#00e5ff] transition-colors" href="#">Gallery</a>
-          <a className="text-slate-400 hover:text-[#00e5ff] transition-colors" href="#">Tutorials</a>
-          <a className="text-slate-400 hover:text-[#00e5ff] transition-colors" href="#">Pricing</a>
-        </div>
+        <button
+          onClick={() => router.push('/projects')}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+        </button>
         <div className="flex items-center gap-4">
           <Link
             href="/app"
@@ -158,7 +158,7 @@ export default function LoginPage() {
                       placeholder="name@studio.com"
                       required
                     />
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600">@</span>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500"><Icons.mail /></span>
                   </div>
                 </div>
                 <div className="group">
@@ -175,7 +175,7 @@ export default function LoginPage() {
                       required
                       minLength={6}
                     />
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600">🔒</span>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-500"><Icons.lock /></span>
                   </div>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function LoginPage() {
                 onClick={handleGuestMode}
                 className="w-full flex items-center justify-center gap-3 bg-[#222a3d]/30 py-4 rounded-xl border border-[#3b494c]/15 text-[#dae2fd] text-sm font-medium hover:bg-[#222a3d]/50 transition-all"
               >
-                🚪 Continue as Guest
+                <Icons.door /> Continue as Guest
               </button>
             </form>
 

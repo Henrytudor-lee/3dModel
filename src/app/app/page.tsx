@@ -63,7 +63,7 @@ export default function AppPage() {
   const router = useRouter();
   const { initialized, loading, isGuest } = useAuthStore();
   const { currentProject, loadSceneData, saveSceneData } = useProjectStore();
-  const { objects, setObjects, clearScene, showGrid, showAxes, theme } = useSceneStore();
+  const { objects, setObjects, clearScene, showGrid, showAxes, theme, setTheme } = useSceneStore();
   const [saveCount, setSaveCount] = useState(0);
   const { activeTool, drawingState } = useSceneStore();
   const hint = getDrawingHint(activeTool, drawingState.phase);
@@ -84,12 +84,17 @@ export default function AppPage() {
         const deserializedObjects = deserializeScene(currentProject.scene_data);
         setObjects(deserializedObjects);
         lastSavedObjects.current = JSON.stringify(deserializedObjects);
+
+        // Load theme from project settings
+        if (currentProject.settings?.theme) {
+          setTheme(currentProject.settings.theme);
+        }
       } else if (!isGuest && !currentProject) {
         // Logged in but no project selected - go to projects
         router.push('/projects');
       }
     }
-  }, [initialized, loading, currentProject, isGuest, router, setObjects]);
+  }, [initialized, loading, currentProject, isGuest, router, setObjects, setTheme]);
 
   // Manual save when saveCount changes
   useEffect(() => {
@@ -100,19 +105,22 @@ export default function AppPage() {
       isSavingRef.current = true;
 
       const objectsToSave = objects;
-      await saveSceneData({
-        version: '1.0',
-        objects: objectsToSave.map((obj) => ({
-          id: obj.id,
-          name: obj.name,
-          type: obj.type,
-          geometry: obj.geometry,
-          transform: obj.transform,
-          material: obj.material,
-          visible: obj.visible,
-          children: obj.children,
-        })),
-      });
+      await saveSceneData(
+        {
+          version: '1.0',
+          objects: objectsToSave.map((obj) => ({
+            id: obj.id,
+            name: obj.name,
+            type: obj.type,
+            geometry: obj.geometry,
+            transform: obj.transform,
+            material: obj.material,
+            visible: obj.visible,
+            children: obj.children,
+          })),
+        },
+        { showGrid, showAxes, theme }
+      );
       lastSavedObjects.current = JSON.stringify(objectsToSave);
       isSavingRef.current = false;
     };
