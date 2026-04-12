@@ -176,6 +176,7 @@ interface SceneState {
   pastePosition: [number, number, number] | null;
 
   // Actions
+  setObjects: (objects: SceneObject[]) => void;
   addObject: (obj: SceneObject, description?: string) => void;
   removeObject: (id: string, description?: string) => void;
   updateObject: (id: string, updates: Partial<SceneObject>, description?: string) => void;
@@ -265,6 +266,16 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   clipboard: [],
   isPasting: false,
   pastePosition: null,
+
+  // Set objects directly (used for loading projects)
+  setObjects: (objects) => {
+    set({
+      objects,
+      selectedIds: [],
+      history: [],
+      historyIndex: -1,
+    });
+  },
 
   addObject: (obj, description) => {
     const state = get();

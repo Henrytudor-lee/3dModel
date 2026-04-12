@@ -1,6 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSceneStore } from '@/stores/sceneStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useProjectStore } from '@/stores/projectStore';
 
 // SVG Icons for a more professional look
 const Icons = {
@@ -112,6 +117,13 @@ const Icons = {
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   ),
+  save: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>
+  ),
 };
 
 const tools = [
@@ -127,12 +139,43 @@ const tools = [
 ];
 
 export default function Toolbar() {
+  const router = useRouter();
   const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme, selectedIds, booleanOperation } = useSceneStore();
+  const { user, isGuest } = useAuthStore();
+  const { projects, currentProject, setCurrentProject, fetchProjects } = useProjectStore();
+
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
   const activeToolColor = tools.find(t => t.id === activeTool)?.color || '#00d9ff';
   const activeToolData = tools.find(t => t.id === activeTool);
   const isDark = theme === 'dark';
   const canPerformCSG = selectedIds.length === 2;
+
+  // Fetch projects when user is logged in
+  useEffect(() => {
+    if (user && !isGuest && projects.length === 0) {
+      fetchProjects();
+    }
+  }, [user, isGuest, projects.length, fetchProjects]);
+
+  const handleProjectSelect = (project: typeof projects[0] | null) => {
+    setCurrentProject(project);
+    setShowProjectDropdown(false);
+    if (project) {
+      router.push('/app');
+    }
+  };
+
+  const handleGoToProjects = () => {
+    setShowProjectDropdown(false);
+    router.push('/projects');
+  };
+
+  const handleSave = () => {
+    if (currentProject) {
+      (window as any).__triggerSave?.();
+    }
+  };
 
   return (
     <div className={`h-12 border-b flex items-center px-3 gap-1 ${
@@ -140,10 +183,85 @@ export default function Toolbar() {
     }`}>
       {/* Logo */}
       <div className={`flex items-center gap-2 mr-3 pr-3 border-r ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-        <div className="w-7 h-7 rounded bg-gradient-to-br from-[#00d9ff] to-[#0099cc] flex items-center justify-center shadow-lg shadow-[#00d9ff]/20">
-          <span className="text-white text-xs font-bold">3D</span>
-        </div>
+        <img src="/logo.png" alt="Logo" className="h-7 w-auto object-contain" />
         <span className={`font-semibold tracking-tight text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Studio</span>
+
+        {/* Project Dropdown - moved here */}
+        {user && !isGuest && (
+          <div className="relative ml-2">
+            <button
+              onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+              className={`flex items-center gap-2 px-2 py-1 rounded-md border transition-all text-xs ${
+                isDark
+                  ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                  : 'bg-gray-100 border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {currentProject?.name || 'Select Project'}
+              </span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? 'text-gray-500' : 'text-gray-400'}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {showProjectDropdown && (
+              <div className={`absolute top-full left-0 mt-1 w-48 rounded-lg border shadow-xl z-50 ${
+                isDark ? 'bg-[#1a1a24] border-white/10' : 'bg-white border-gray-200'
+              }`}>
+                <div className={`p-2 border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+                  <button
+                    onClick={handleGoToProjects}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                      isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    📁 Manage Projects
+                  </button>
+                </div>
+                <div className="p-2 max-h-48 overflow-y-auto">
+                  {projects.length === 0 ? (
+                    <div className={`px-3 py-4 text-center text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      No projects yet
+                    </div>
+                  ) : (
+                    projects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => handleProjectSelect(project)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs transition-colors ${
+                          currentProject?.id === project.id
+                            ? isDark ? 'bg-[#00d9ff]/20 text-[#00d9ff]' : 'bg-blue-50 text-blue-600'
+                            : isDark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="truncate">{project.name}</span>
+                        {currentProject?.id === project.id && (
+                          <span className="ml-auto text-[#00d9ff]">✓</span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Save Button */}
+        {user && !isGuest && currentProject && (
+          <button
+            onClick={handleSave}
+            className={`ml-1 w-7 h-7 flex items-center justify-center rounded-md transition-all ${
+              isDark
+                ? 'text-gray-400 hover:text-[#00d9ff] hover:bg-white/5'
+                : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'
+            }`}
+            title="Save Project"
+          >
+            <Icons.save />
+          </button>
+        )}
       </div>
 
       {/* Tool Groups */}
