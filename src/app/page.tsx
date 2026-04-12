@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Toolbar from '@/components/toolbar/Toolbar';
 import ModelTree from '@/components/model-tree/ModelTree';
 import PropertiesPanel from '@/components/properties/PropertiesPanel';
+import LogPanel from '@/components/log/LogPanel';
 import { useSceneStore } from '@/stores/sceneStore';
 import { useState, useCallback, useEffect, useRef } from 'react';
 
@@ -60,10 +61,17 @@ export default function Home() {
   const isDark = theme === 'dark';
 
   // Vertical divider between ModelTree and PropertiesPanel
-  const [modelTreeHeight, setModelTreeHeight] = useState(280);
+  const [modelTreeHeight, setModelTreeHeight] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
   const resizingRef = useRef(false);
-  const panelTopRef = useRef(0);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+
+  // Initialize ModelTree height to 50% on mount
+  useEffect(() => {
+    if (leftPanelRef.current) {
+      setModelTreeHeight(leftPanelRef.current.clientHeight / 2);
+    }
+  }, []);
 
   const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -111,6 +119,7 @@ export default function Home() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Model Tree + Properties */}
         <div
+          ref={leftPanelRef}
           id="left-panel"
           className={`w-[280px] flex flex-col border-r flex-shrink-0 ${isDark ? 'border-white/5' : 'border-gray-200'}`}
         >
@@ -141,8 +150,11 @@ export default function Home() {
         </div>
 
         {/* Right Panel - 3D Canvas */}
-        <div className="flex-1 relative">
+        <div id="canvas-container" className="flex-1 relative">
           <SceneCanvas />
+
+          {/* Log Panel - floating at bottom left */}
+          <LogPanel />
 
           {/* Tool hint */}
           {hint && (

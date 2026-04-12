@@ -121,7 +121,7 @@ function getMaterial(material: SceneObject['material']) {
 function SceneObject3D({ object, isSelected, onClick }: {
   object: SceneObject;
   isSelected: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  onClick: (e: React.MouseEvent | React.PointerEvent) => void;
 }) {
   const { geometry, material, transform, type } = object;
 
@@ -133,7 +133,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
 
   if (type === 'box') {
     return (
-      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onPointerDown={onClick}>
         <boxGeometry args={[
           (geometry.width as number) || 1,
           (geometry.height as number) || 1,
@@ -156,7 +156,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
 
   if (type === 'sphere') {
     return (
-      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onPointerDown={onClick}>
         <sphereGeometry args={[(geometry.radius as number) || 0.5, 32, 32]} />
         {getMaterial(material)}
         {isSelected && (
@@ -171,7 +171,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
 
   if (type === 'cylinder') {
     return (
-      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onPointerDown={onClick}>
         <cylinderGeometry args={[
           (geometry.radius as number) || 0.5,
           (geometry.radius as number) || 0.5,
@@ -198,7 +198,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
     const sides = (geometry.sides as number) || 6;
     const radius = (geometry.radius as number) || 0.5;
     return (
-      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick}>
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onPointerDown={onClick}>
         <cylinderGeometry args={[radius, radius, (geometry.height as number) || 1, sides]} />
         {getMaterial(material)}
         {isSelected && (
@@ -221,7 +221,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
         points={points}
         color={material.color}
         lineWidth={2}
-        onClick={onClick}
+        onPointerDown={onClick}
       />
     );
   }
@@ -250,7 +250,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
     // Position at centroid and rotate +90 degrees around X to lay flat (not mirrored)
     return (
       <group position={[centroidX, 0.005, centroidZ]} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale}>
-        <mesh onClick={onClick}>
+        <mesh onPointerDown={onClick}>
           <extrudeGeometry args={[shape, extrudeSettings]} />
           {material.type === 'glass' ? (
             <meshPhysicalMaterial
@@ -288,6 +288,30 @@ function SceneObject3D({ object, isSelected, onClick }: {
     );
   }
 
+  if (type === 'circle') {
+    const radius = (geometry.radius as number) || 0.5;
+    return (
+      <mesh position={position} rotation={[Math.PI / 2, 0, 0]} scale={transform.scale} onPointerDown={onClick}>
+        <circleGeometry args={[radius, 128]} />
+        <meshStandardMaterial
+          color={material.color}
+          metalness={material.type === 'metal' ? 1 : 0}
+          roughness={material.type === 'metal' ? 0.3 : 0.5}
+          opacity={material.opacity}
+          transparent={material.opacity < 1}
+          wireframe={material.wireframe}
+          side={THREE.DoubleSide}
+        />
+        {isSelected && (
+          <lineSegments>
+            <edgesGeometry args={[new THREE.CircleGeometry(radius, 128)]} />
+            <lineBasicMaterial color="#00d9ff" linewidth={2} />
+          </lineSegments>
+        )}
+      </mesh>
+    );
+  }
+
   if (type === 'curve') {
     const rawPoints = geometry.points;
     if (!rawPoints || !Array.isArray(rawPoints) || rawPoints.length < 2) return null;
@@ -310,7 +334,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
         points={lineArr}
         color={material.color}
         lineWidth={2}
-        onClick={onClick}
+        onPointerDown={onClick}
       />
     );
   }
@@ -320,7 +344,7 @@ function SceneObject3D({ object, isSelected, onClick }: {
     if (!meshGeometry) return null;
 
     return (
-      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onClick={onClick} geometry={meshGeometry}>
+      <mesh position={position} rotation={transform.rotation} scale={transform.scale} onPointerDown={onClick} geometry={meshGeometry}>
         {getMaterial(material)}
         {isSelected && (
           <lineSegments>
@@ -348,7 +372,7 @@ function GroundPlane({ onClick, onMove }: {
     onMove([point.x, 0, point.z]);
   }, [onMove]);
 
-  const handleClick = useCallback((event: ThreeEvent<MouseEvent>) => {
+  const handlePointerDown = useCallback((event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     const point = event.point;
     onClick([point.x, 0, point.z]);
@@ -360,7 +384,7 @@ function GroundPlane({ onClick, onMove }: {
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, 0, 0]}
       onPointerMove={handlePointerMove}
-      onClick={handleClick}
+      onPointerDown={handlePointerDown}
     >
       <planeGeometry args={[100, 100]} />
       <meshBasicMaterial transparent opacity={0} />
@@ -500,6 +524,21 @@ function DrawingPreview({
       <mesh position={spherePos}>
         <sphereGeometry args={[Math.max(0.1, radius), 16, 16]} />
         <meshStandardMaterial color="#4a90d9" transparent opacity={0.5} wireframe />
+      </mesh>
+    );
+  }
+
+  // Circle preview - flat filled circle on the ground
+  if (activeTool === 'circle' && drawingState.phase === 'placing' && drawingState.point1) {
+    const p1 = drawingState.point1;
+    const radius = Math.sqrt(
+      Math.pow(mousePos[0] - p1[0], 2) +
+      Math.pow(mousePos[2] - p1[2], 2)
+    );
+    return (
+      <mesh position={[p1[0], 0.005, p1[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[Math.max(0.1, radius), 128]} />
+        <meshBasicMaterial color="#4a90d9" transparent opacity={0.5} side={THREE.DoubleSide} />
       </mesh>
     );
   }
@@ -769,7 +808,9 @@ function SceneContent({
     <>
       {/* Lighting */}
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
+      <directionalLight position={[10, 10, 5]} intensity={2} castShadow />
+      <pointLight position={[-5, 5, -5]} intensity={1} />
+      <pointLight position={[5, 3, 5]} intensity={1} />
 
       {/* Camera Controls - disable when drawing or pasting */}
       <OrbitControls
@@ -1041,6 +1082,43 @@ export default function SceneCanvas() {
         setDrawingState({
           polygonPoints: [...polyPoints, point]
         });
+      }
+      return;
+    }
+
+    // CIRCLE TOOL
+    if (tool === 'circle') {
+      if (drawingState.phase === 'idle') {
+        // First click - set center
+        setDrawingState({
+          phase: 'placing',
+          point1: point
+        });
+      } else if (drawingState.phase === 'placing') {
+        // Second click - set radius and create circle
+        const p1 = drawingState.point1!;
+        const radius = Math.sqrt(
+          Math.pow(point[0] - p1[0], 2) +
+          Math.pow(point[2] - p1[2], 2)
+        ) || 0.5;
+
+        const id = crypto.randomUUID();
+        const circleObject: SceneObject = {
+          id,
+          name: `Circle_${String(objects.filter(o => o.type === 'circle').length + 1).padStart(2, '0')}`,
+          type: 'circle',
+          geometry: { radius },
+          transform: {
+            position: [p1[0], 0.005, p1[2]],
+            rotation: [0, 0, 0],
+            scale: [1, 1, 1]
+          },
+          material: { color: '#4a90d9', opacity: 1, type: 'standard', wireframe: false },
+          visible: true,
+        };
+        addObject(circleObject);
+        setSelectedIds([id]);
+        resetDrawing();
       }
       return;
     }
@@ -1333,7 +1411,7 @@ export default function SceneCanvas() {
     <div className={`w-full h-full ${isDark ? 'bg-[#0a0a0f]' : 'bg-[#f0f4f8]'}`} onContextMenu={handleContextMenu} onPointerDown={handlePointerDown}>
       <Canvas
         camera={{ position: [10, 10, 10], fov: 50 }}
-        onCreated={({ scene }) => {
+        onCreated={({ gl, scene }) => {
           scene.background = new THREE.Color(theme === 'dark' ? '#0a0a0f' : '#f0f4f8');
         }}
       >

@@ -11,24 +11,22 @@ const Icons = {
     </svg>
   ),
   line: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <line x1="5" y1="19" x2="19" y2="5" />
     </svg>
   ),
   curve: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M4 20 Q 12 4, 20 12" />
     </svg>
   ),
   sphere: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <ellipse cx="12" cy="12" rx="9" ry="3" />
-      <line x1="12" y1="3" x2="12" y2="21" />
+    <svg width="18" height="18" viewBox="0 0 1024 1024" fill="currentColor">
+      <path d="M890.24 578.72C824.48 633.76 679.84 672 512 672s-312.48-38.24-378.24-93.28C165.344 758.976 322.688 896 512 896s346.656-137.024 378.24-317.28zM128 512c0 62.336 170.72 128 384 128s384-65.664 384-128c0-8.352-0.256-16.672-0.8-24.896l-6.112 3.904c-13.312-20.928-44.48-42.464-89.92-60.512l11.808-29.76c32.544 12.928 59.456 28 79.264 44.544C858.656 265.024 701.312 128 512 128S165.344 265.024 133.76 445.28a250.624 250.624 0 0 1 49.92-31.52l14.144 28.672c-43.2 21.312-66.56 44.96-69.504 65.088H128V512z m560-145.024l-5.664 31.488a935.872 935.872 0 0 0-123.008-13.408l1.408-31.968c45.024 2.016 87.808 6.816 127.264 13.888z m-255.968-12.032l2.4 31.904c-43.264 3.264-84.48 9.184-122.24 17.504l-6.88-31.232a905.472 905.472 0 0 1 126.72-18.176zM512 928C282.24 928 96 741.76 96 512S282.24 96 512 96s416 186.24 416 416-186.24 416-416 416z"/>
     </svg>
   ),
   cylinder: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <ellipse cx="12" cy="6" rx="7" ry="3" />
       <ellipse cx="12" cy="18" rx="7" ry="3" />
       <line x1="5" y1="6" x2="5" y2="18" />
@@ -43,17 +41,21 @@ const Icons = {
     </svg>
   ),
   prism: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2l-8 4.5v9l8 4.5 8-4.5v-9L12 2z" />
-      <path d="M12 22V12" />
-      <path d="M20 6.5l-8 4.5" />
-      <path d="M4 6.5l8 4.5" />
-      <ellipse cx="12" cy="12" rx="8" ry="4.5" />
+    <svg width="18" height="18" viewBox="0 0 1024 1024" fill="currentColor">
+      <path d="M788.6336 0l7.68 9.216 144.4352 173.312-250.1632 207.2064-7.0656 5.9392H199.1168l-7.5264-12.2368-115.6096-188.6208L378.9824 3.9424 385.2288 0h403.456zM146.0736 211.0976l81.7152 133.376h437.248l203.4688-168.6016L764.672 51.2H400.0256l-253.952 159.8976z"/>
+      <path d="M939.4176 179.2l-0.512 612.2496-8.3456 7.5776-239.104 218.2656-7.3216 6.7072h-484.352L76.8 840.3456V194.56h51.2v630.272L227.072 972.8h437.248l223.3856-203.9296 0.512-589.6704h51.2z"/>
+      <path d="M239.0016 358.4v640h-51.2V358.4h51.2z"/>
+      <path d="M699.8016 358.4v640h-51.2V358.4h51.2z"/>
     </svg>
   ),
   polygon: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <polygon points="12,2 20,8 17,18 7,18 4,8" />
+    </svg>
+  ),
+  circle: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="9" />
     </svg>
   ),
   union: () => (
@@ -116,6 +118,7 @@ const tools = [
   { id: 'select', label: 'Select', color: '#94a3b8' },
   { id: 'line', label: 'Line', color: '#22c55e' },
   { id: 'curve', label: 'Curve', color: '#a855f7' },
+  { id: 'circle', label: 'Circle', color: '#ec4899' },
   { id: 'sphere', label: 'Sphere', color: '#3b82f6' },
   { id: 'cylinder', label: 'Cylinder', color: '#f97316' },
   { id: 'cube', label: 'Cube', color: '#ef4444' },

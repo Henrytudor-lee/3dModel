@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
 import { performCSGOperationAsync, getDefaultMaterial } from '@/utils/csg';
+import { useLogStore } from './logStore';
 
 export interface SceneObject {
   id: string;
   name: string;
-  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'group' | 'csgresult';
+  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'circle' | 'group' | 'csgresult';
   geometry: Record<string, number | number[]>;
   meshGeometry?: THREE.BufferGeometry; // For storing generated CSG geometry
   transform: {
@@ -21,6 +22,104 @@ export interface SceneObject {
   };
   visible: boolean;
   children?: string[]; // Child object IDs for grouping
+}
+
+// Helper to format geometry details
+function formatGeometry(obj: SceneObject): string {
+  const { geometry, type } = obj;
+  switch (type) {
+    case 'box':
+      return `W${(geometry.width as number)?.toFixed(1) || '?'} × H${(geometry.height as number)?.toFixed(1) || '?'} × D${(geometry.depth as number)?.toFixed(1) || '?'}`;
+    case 'sphere':
+      return `r${(geometry.radius as number)?.toFixed(1) || '?'}`;
+    case 'cylinder':
+    case 'prism':
+      const sides = geometry.sides as number;
+      return `r${(geometry.radius as number)?.toFixed(1) || '?'}, ${sides}-sided`;
+    default:
+      return '';
+  }
+}
+
+// Helper to format position
+function formatPosition(pos: [number, number, number]): string {
+  return `(${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)})`;
+}
+
+// Helper to format material
+function formatMaterial(mat: SceneObject['material']): string {
+  const typeStr = mat.type !== 'standard' ? `, ${mat.type}` : '';
+  const opacityStr = mat.opacity < 1 ? `, ${(mat.opacity * 100).toFixed(0)}% opacity` : '';
+  const wireStr = mat.wireframe ? ', wireframe' : '';
+  return `${mat.color}${typeStr}${opacityStr}${wireStr}`;
+}
+
+// Generate detailed creation log message
+function getCreationMessage(obj: SceneObject): string {
+  const geomInfo = formatGeometry(obj);
+  const posInfo = formatPosition(obj.transform.position);
+  const matInfo = formatMaterial(obj.material);
+
+  let msg = `Created ${obj.name} [${obj.type}]`;
+  if (geomInfo) msg += ` - ${geomInfo}`;
+  msg += ` at ${posInfo}`;
+  msg += ` | ${matInfo}`;
+  return msg;
+}
+
+// Get detailed change message for updates
+function getUpdateMessage(obj: SceneObject, updates: Partial<SceneObject>, beforeObj: SceneObject): string {
+  const parts: string[] = [];
+
+  // Check transform changes
+  if (updates.transform) {
+    const before = beforeObj.transform;
+    const after = updates.transform;
+    if (before.position !== after.position) {
+      parts.push(`pos: ${formatPosition(before.position)} → ${formatPosition(after.position)}`);
+    }
+    if (before.rotation !== after.rotation) {
+      parts.push(`rot: (${before.rotation.map(r => (r * 180 / Math.PI).toFixed(0)).join(', ')}°) → (${after.rotation.map(r => (r * 180 / Math.PI).toFixed(0)).join(', ')}°)`);
+    }
+    if (before.scale !== after.scale) {
+      parts.push(`scale: (${before.scale.join(', ')}) → (${after.scale.join(', ')})`);
+    }
+  }
+
+  // Check material changes
+  if (updates.material) {
+    const before = beforeObj.material;
+    const after = updates.material;
+    if (before.color !== after.color) {
+      parts.push(`color: ${before.color} → ${after.color}`);
+    }
+    if (before.type !== after.type) {
+      parts.push(`material: ${before.type} → ${after.type}`);
+    }
+    if (before.opacity !== after.opacity) {
+      parts.push(`opacity: ${(before.opacity * 100).toFixed(0)}% → ${(after.opacity * 100).toFixed(0)}%`);
+    }
+    if (before.wireframe !== after.wireframe) {
+      parts.push(`wireframe: ${before.wireframe} → ${after.wireframe}`);
+    }
+  }
+
+  // Check geometry changes
+  if (updates.geometry) {
+    const before = beforeObj.geometry;
+    const after = updates.geometry;
+    for (const key of Object.keys(after)) {
+      if (before[key] !== after[key]) {
+        parts.push(`${key}: ${before[key]} → ${after[key]}`);
+      }
+    }
+  }
+
+  if (parts.length === 0) {
+    return `Updated ${obj.name}`;
+  }
+
+  return `${obj.name}: ${parts.join(' | ')}`;
 }
 
 export type DrawingPhase = 'idle' | 'placing' | 'drag' | 'height';
@@ -185,6 +284,9 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
     });
+
+    // Log the creation with details
+    useLogStore.getState().addLog(getCreationMessage(obj), 'create');
   },
 
   removeObject: (id, description) => {
@@ -212,6 +314,9 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
     });
+
+    // Log the deletion
+    useLogStore.getState().addLog(`Deleted ${obj.name}`, 'delete');
   },
 
   updateObject: (id, updates, description) => {
@@ -240,9 +345,28 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
     });
+
+    // Log the update with detailed message
+    const logMsg = description || getUpdateMessage(obj, updates, beforeObj);
+    let logType: 'update' | 'material' | 'transform' = 'update';
+    if (updates.material) logType = 'material';
+    else if (updates.transform) logType = 'transform';
+    useLogStore.getState().addLog(logMsg, logType);
   },
 
-  setSelectedId: (id) => set({ selectedIds: id ? [id] : [] }),
+  setSelectedId: (id) => {
+    const state = get();
+    const prevId = state.selectedIds[0];
+    set({ selectedIds: id ? [id] : [] });
+
+    // Log selection changes
+    if (id && id !== prevId) {
+      const obj = get().objects.find((o) => o.id === id);
+      if (obj) {
+        useLogStore.getState().addLog(`Selected ${obj.name}`, 'select');
+      }
+    }
+  },
 
   toggleSelectedId: (id) => set((state) => {
     const isSelected = state.selectedIds.includes(id);
@@ -296,6 +420,9 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
     });
+
+    // Log the grouping
+    useLogStore.getState().addLog(`Grouped ${state.selectedIds.length} objects as ${groupName}`, 'operation');
   },
 
   ungroupObject: (id) => {
@@ -324,6 +451,9 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
     });
+
+    // Log the ungrouping
+    useLogStore.getState().addLog(`Ungrouped ${group.name}`, 'operation');
   },
 
   setActiveTool: (tool) => set({ activeTool: tool, drawingState: initialDrawingState, previewObject: null }),
@@ -689,6 +819,12 @@ export const useSceneStore = create<SceneState>((set, get) => ({
         history: newHistory,
         historyIndex: newHistory.length - 1,
       });
+
+      // Log the boolean operation
+      useLogStore.getState().addLog(
+        `Boolean ${operation}: ${obj1.name} + ${obj2.name}`,
+        'boolean'
+      );
     } catch (error) {
       console.error('CSG operation failed:', error);
     }
