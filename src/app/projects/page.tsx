@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { Icons } from '@/components/ui/Icons';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -55,11 +56,7 @@ export default function ProjectsPage() {
   };
 
   if (!initialized || loading || projectsLoading) {
-    return (
-      <div className="min-h-screen bg-[#0b1326] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#00e5ff] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <LoadingScreen message="Loading Projects..." variant="dark" />;
   }
 
   return (

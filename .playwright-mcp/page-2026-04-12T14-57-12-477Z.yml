@@ -1,0 +1,58 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - button "Logo" [active] [ref=e66]:
+        - img "Logo" [ref=e67]
+      - link "Start Modeling" [ref=e6] [cursor=pointer]:
+        - /url: /app
+    - main [ref=e7]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: Engineered for High-Fidelity
+          - heading "Sculpt the Future." [level=1] [ref=e15]
+          - paragraph [ref=e16]: The web's most powerful 3D workspace. Professional-grade modeling and real-time collaboration, refined for the modern creator.
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]: ✓
+            - text: Real-time Raytracing
+          - generic [ref=e20]:
+            - generic [ref=e21]: ✓
+            - text: Dynamic Sculpting
+          - generic [ref=e22]:
+            - generic [ref=e23]: ✓
+            - text: Team Workflows
+      - complementary [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - heading "Welcome Back." [level=2] [ref=e27]
+            - paragraph [ref=e28]: Sign in to your workspace and assets.
+          - generic [ref=e29]:
+            - button "Login" [ref=e30]
+            - button "Register" [ref=e31]
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - generic [ref=e34]:
+                - generic [ref=e35]: Email Address
+                - generic [ref=e36]:
+                  - textbox "name@studio.com" [ref=e37]
+                  - img [ref=e39]
+              - generic [ref=e42]:
+                - generic [ref=e43]: Password
+                - generic [ref=e44]:
+                  - textbox "••••••••" [ref=e45]
+                  - img [ref=e47]
+            - link "Forgot Access?" [ref=e51] [cursor=pointer]:
+              - /url: "#"
+            - button "Launch Dashboard" [ref=e52]
+            - generic [ref=e55]: Or
+            - button "Continue as Guest" [ref=e57]:
+              - img [ref=e58]
+              - text: Continue as Guest
+          - paragraph [ref=e62]:
+            - text: By entering the void, you agree to our
+            - link "EULA" [ref=e63] [cursor=pointer]:
+              - /url: "#"
+            - text: "&"
+            - link "Privacy Policy" [ref=e64] [cursor=pointer]:
+              - /url: "#"
+  - alert [ref=e65]

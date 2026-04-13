@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import Link from 'next/link';
 import { Icons } from '@/components/ui/Icons';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import { useI18n } from '@/i18n';
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, isGuest, loading, initialized, signIn, signUp, continueAsGuest, error, clearError } = useAuthStore();
+  const { t } = useI18n();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,14 +65,15 @@ export default function LoginPage() {
           onClick={() => router.push('/projects')}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+          <img src="/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
         </button>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <Link
             href="/app"
             className="bg-[#00e5ff] text-[#00363d] px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all"
           >
-            Start Modeling
+            {t('nav.startModeling')}
           </Link>
         </div>
       </nav>
@@ -111,10 +115,10 @@ export default function LoginPage() {
           <div className="flex flex-col h-full">
             <div className="mb-12 text-center">
               <h2 className="text-4xl font-black text-[#dae2fd] tracking-tight mb-3">
-                {isRegisterMode ? 'Join the Void.' : 'Welcome Back.'}
+                {isRegisterMode ? t('auth.joinVoid') : t('auth.welcomeBack')}
               </h2>
               <p className="text-[#bac9cc] text-sm">
-                {isRegisterMode ? 'Create your account to access your workspaces.' : 'Sign in to your workspace and assets.'}
+                {isRegisterMode ? t('auth.registerSubtitle') : t('auth.loginSubtitle')}
               </p>
             </div>
 
@@ -128,7 +132,7 @@ export default function LoginPage() {
                     : 'text-[#bac9cc] hover:text-[#dae2fd]'
                 }`}
               >
-                Login
+                {t('auth.login')}
               </button>
               <button
                 onClick={() => setIsRegisterMode(true)}
@@ -138,7 +142,7 @@ export default function LoginPage() {
                     : 'text-[#bac9cc] hover:text-[#dae2fd]'
                 }`}
               >
-                Register
+                {t('auth.register')}
               </button>
             </div>
 
@@ -147,7 +151,7 @@ export default function LoginPage() {
               <div className="space-y-5">
                 <div className="group">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2.5 px-1">
-                    Email Address
+                    {t('auth.email')}
                   </label>
                   <div className="relative">
                     <input
@@ -163,7 +167,7 @@ export default function LoginPage() {
                 </div>
                 <div className="group">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2.5 px-1">
-                    Password
+                    {t('auth.password')}
                   </label>
                   <div className="relative">
                     <input
@@ -183,7 +187,7 @@ export default function LoginPage() {
               {!isRegisterMode && (
                 <div className="flex items-center justify-end">
                   <a className="text-xs text-[#00e5ff] hover:text-[#00daf3] transition-colors font-bold tracking-wide" href="#">
-                    Forgot Access?
+                    {t('auth.forgotAccess')}
                   </a>
                 </div>
               )}
@@ -202,16 +206,16 @@ export default function LoginPage() {
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-[#00363d] border-t-transparent rounded-full animate-spin" />
-                    {isRegisterMode ? 'Creating Account...' : 'Signing In...'}
+                    {isRegisterMode ? t('auth.creatingAccount') : t('auth.signingIn')}
                   </span>
                 ) : (
-                  isRegisterMode ? 'Create Account' : 'Launch Dashboard'
+                  isRegisterMode ? t('auth.createAccount') : t('auth.launchDashboard')
                 )}
               </button>
 
               <div className="relative flex items-center py-6">
                 <div className="flex-grow border-t border-[#3b494c]/10" />
-                <span className="flex-shrink mx-6 text-[10px] text-slate-600 uppercase tracking-widest font-bold">Or</span>
+                <span className="flex-shrink mx-6 text-[10px] text-slate-600 uppercase tracking-widest font-bold">{t('auth.or')}</span>
                 <div className="flex-grow border-t border-[#3b494c]/10" />
               </div>
 
@@ -220,14 +224,14 @@ export default function LoginPage() {
                 onClick={handleGuestMode}
                 className="w-full flex items-center justify-center gap-3 bg-[#222a3d]/30 py-4 rounded-xl border border-[#3b494c]/15 text-[#dae2fd] text-sm font-medium hover:bg-[#222a3d]/50 transition-all"
               >
-                <Icons.door /> Continue as Guest
+                <Icons.door /> {t('auth.continueAsGuest')}
               </button>
             </form>
 
             <footer className="mt-16 text-center">
               <p className="text-[10px] text-slate-600 leading-relaxed uppercase tracking-tighter">
-                By entering the void, you agree to our<br />
-                <a className="text-slate-400 hover:text-[#00e5ff] underline" href="#">EULA</a> &amp; <a className="text-slate-400 hover:text-[#00e5ff] underline" href="#">Privacy Policy</a>
+                {t('auth.byEnteringVoid')}<br />
+                <a className="text-slate-400 hover:text-[#00e5ff] underline" href="#">{t('auth.eula')}</a> &amp; <a className="text-slate-400 hover:text-[#00e5ff] underline" href="#">{t('auth.privacyPolicy')}</a>
               </p>
             </footer>
           </div>

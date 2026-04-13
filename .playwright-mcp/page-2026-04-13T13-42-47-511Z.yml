@@ -1,0 +1,62 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - button "Logo" [ref=e5]:
+        - img "Logo" [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - button "EN" [ref=e9]
+          - button "中文" [active] [ref=e10]
+        - link "开始建模" [ref=e71] [cursor=pointer]:
+          - /url: /app
+    - main [ref=e12]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Engineered for High-Fidelity
+          - heading "Sculpt the Future." [level=1] [ref=e20]
+          - paragraph [ref=e21]: The web's most powerful 3D workspace. Professional-grade modeling and real-time collaboration, refined for the modern creator.
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: ✓
+            - text: Real-time Raytracing
+          - generic [ref=e25]:
+            - generic [ref=e26]: ✓
+            - text: Dynamic Sculpting
+          - generic [ref=e27]:
+            - generic [ref=e28]: ✓
+            - text: Team Workflows
+      - complementary [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - heading "欢迎回来。" [level=2] [ref=e72]
+            - paragraph [ref=e33]: 登录到您的工作区和资产。
+          - generic [ref=e34]:
+            - button "登录" [ref=e73]
+            - button "注册" [ref=e74]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - generic [ref=e40]: 电子邮箱
+                - generic [ref=e41]:
+                  - textbox "name@studio.com" [ref=e42]
+                  - img [ref=e44]
+              - generic [ref=e47]:
+                - generic [ref=e48]: 密码
+                - generic [ref=e49]:
+                  - textbox "••••••••" [ref=e50]
+                  - img [ref=e52]
+            - link "忘记密码？" [ref=e75] [cursor=pointer]:
+              - /url: "#"
+            - button "启动工作台" [ref=e76]
+            - generic [ref=e60]: 或者
+            - button "游客模式" [ref=e77]:
+              - img [ref=e63]
+              - text: 游客模式
+          - paragraph [ref=e67]:
+            - text: 进入虚空即表示您同意我们的
+            - link "最终用户协议" [ref=e78] [cursor=pointer]:
+              - /url: "#"
+            - text: "&"
+            - link "隐私政策" [ref=e79] [cursor=pointer]:
+              - /url: "#"
+  - alert [ref=e70]

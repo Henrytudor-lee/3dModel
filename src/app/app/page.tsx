@@ -7,6 +7,7 @@ import Toolbar from '@/components/toolbar/Toolbar';
 import ModelTree from '@/components/model-tree/ModelTree';
 import PropertiesPanel from '@/components/properties/PropertiesPanel';
 import LogPanel from '@/components/log/LogPanel';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import { useSceneStore } from '@/stores/sceneStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore, deserializeScene } from '@/stores/projectStore';
@@ -15,14 +16,7 @@ import { useState, useCallback, useRef } from 'react';
 // Dynamic import for Three.js canvas (client-side only)
 const SceneCanvas = dynamic(() => import('@/components/canvas/SceneCanvas'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#0a0a0f]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-[#00d9ff] border-t-transparent rounded-full animate-spin" />
-        <div className="text-[#00d9ff] text-sm">Loading Engine...</div>
-      </div>
-    </div>
-  ),
+  loading: () => <LoadingScreen message="Loading Engine..." />,
 });
 
 function getDrawingHint(activeTool: string | null, phase: string): string | null {
@@ -178,14 +172,7 @@ export default function AppPage() {
   }, [initialized, loading]);
 
   if (!initialized || loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-[#0a0a0f]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#00d9ff] border-t-transparent rounded-full animate-spin" />
-          <div className="text-[#00d9ff] text-sm">Loading...</div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading Studio..." />;
   }
 
   return (
