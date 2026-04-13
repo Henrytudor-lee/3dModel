@@ -69,12 +69,6 @@ export default function LoginPage() {
         </button>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <Link
-            href="/app"
-            className="bg-[#00e5ff] text-[#00363d] px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all"
-          >
-            {t('nav.startModeling')}
-          </Link>
         </div>
       </nav>
 

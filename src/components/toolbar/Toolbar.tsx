@@ -187,7 +187,7 @@ export default function Toolbar() {
         className={`flex items-center gap-2 mr-3 pr-3 border-r ${isDark ? 'border-white/10' : 'border-gray-200'}`}
       >
         <img src="/logo.png" alt="Logo" className="h-[72px] w-auto object-contain" />
-        <span className={`font-semibold tracking-tight text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Studio</span>
+        <span className={`font-semibold tracking-tight text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>Workbench</span>
       </button>
 
       {/* Project Dropdown */}
