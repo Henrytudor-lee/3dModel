@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useSceneStore } from '@/stores/sceneStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
+import { useChatStore } from '@/stores/chatStore';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 
 // SVG Icons for a more professional look
 const Icons = {
@@ -124,6 +126,14 @@ const Icons = {
       <polyline points="7 3 7 8 15 8" />
     </svg>
   ),
+  ai: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="10" r="1" fill="currentColor" />
+      <circle cx="8" cy="10" r="1" fill="currentColor" />
+      <circle cx="16" cy="10" r="1" fill="currentColor" />
+    </svg>
+  ),
 };
 
 const tools = [
@@ -143,6 +153,7 @@ export default function Toolbar() {
   const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme, selectedIds, booleanOperation } = useSceneStore();
   const { user, isGuest } = useAuthStore();
   const { projects, currentProject, setCurrentProject, fetchProjects } = useProjectStore();
+  const { openChat } = useChatStore();
 
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
@@ -416,6 +427,11 @@ export default function Toolbar() {
             style={{ backgroundColor: isDark ? '#f59e0b' : '#3b82f6', boxShadow: `0 0 6px ${isDark ? '#f59e0b' : '#3b82f6'}` }}
           />
         </button>
+
+        {/* Language Switcher */}
+        <div className="mx-1">
+          <LanguageSwitcher />
+        </div>
       </div>
 
       {/* Spacer */}
@@ -442,6 +458,16 @@ export default function Toolbar() {
           <span className={isDark ? 'text-gray-500' : 'text-gray-600'}>ESC</span> Cancel
         </div>
       </div>
+
+      {/* AI Chat Button - Far Right */}
+      <button
+        onClick={openChat}
+        className={`ml-3 flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-150 bg-gradient-to-r from-[#a855f7] to-[#6366f1] text-white hover:opacity-90`}
+        title="AI Chat"
+      >
+        <span className="text-xs font-bold">AI</span>
+        <Icons.ai />
+      </button>
     </div>
   );
 }

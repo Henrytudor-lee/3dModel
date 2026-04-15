@@ -8,6 +8,7 @@ import ModelTree from '@/components/model-tree/ModelTree';
 import PropertiesPanel from '@/components/properties/PropertiesPanel';
 import LogPanel from '@/components/log/LogPanel';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import AiChatPanel from '@/components/ai-chat/AiChatPanel';
 import { useSceneStore } from '@/stores/sceneStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore, deserializeScene } from '@/stores/projectStore';
@@ -220,6 +221,9 @@ export default function AppPage() {
 
           {/* Log Panel - floating at bottom left */}
           <LogPanel />
+
+          {/* AI Chat Panel */}
+          <AiChatPanel />
 
           {/* Tool hint */}
           {hint && (
