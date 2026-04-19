@@ -538,6 +538,14 @@ function GroundPlane({
 }) {
   const planeRef = useRef<THREE.Mesh>(null);
 
+  // Disable raycast on ground plane to prevent it from blocking selection of models below y=0
+  // Snapping will still work via the canvas-level handler which computes y=0 plane intersection directly
+  useEffect(() => {
+    if (planeRef.current) {
+      planeRef.current.raycast = () => {};
+    }
+  }, []);
+
   const handlePointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       event.stopPropagation();
@@ -1307,24 +1315,11 @@ function SceneContent({
           closestIntersect.point.z,
         ];
       } else {
-        // Find ground plane intersection
-        for (const intersect of intersects) {
-          if (intersect.object.type === "Plane" || intersect.object.name === "Ground") {
-            rawPoint = [
-              intersect.point.x,
-              intersect.point.y,
-              intersect.point.z,
-            ];
-            break;
-          }
-        }
-        // Fallback: use first intersection if available
-        if (!rawPoint && intersects.length > 0 && intersects[0].point) {
-          rawPoint = [
-            intersects[0].point.x,
-            intersects[0].point.y,
-            intersects[0].point.z,
-          ];
+        // Compute intersection with y=0 ground plane directly using ray-plane intersection
+        const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        const groundPoint = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(groundPlane, groundPoint)) {
+          rawPoint = [groundPoint.x, groundPoint.y, groundPoint.z];
         }
       }
 
