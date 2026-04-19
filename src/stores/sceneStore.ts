@@ -181,10 +181,12 @@ function getCreationMessage(obj: SceneObject): string {
   const posInfo = formatPosition(obj.transform.position);
   const matInfo = formatMaterial(obj.material);
 
-  let msg = `Created ${obj.name} [${obj.type}]`;
-  if (geomInfo) msg += ` - ${geomInfo}`;
-  msg += ` at ${posInfo}`;
-  msg += ` | ${matInfo}`;
+  // Multi-line detailed message
+  let msg = `Created ${obj.name}`;
+  msg += `\nType: ${obj.type}`;
+  if (geomInfo) msg += `\nSize: ${geomInfo}`;
+  msg += `\nPosition: ${posInfo}`;
+  msg += `\nMaterial: ${matInfo}`;
   return msg;
 }
 
@@ -505,16 +507,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
 
   setSelectedId: (id) => {
     const state = get();
-    const prevId = state.selectedIds[0];
     set({ selectedIds: id ? [id] : [] });
-
-    // Log selection changes
-    if (id && id !== prevId) {
-      const obj = get().objects.find((o) => o.id === id);
-      if (obj) {
-        useLogStore.getState().addLog(`Selected ${obj.name}`, 'select');
-      }
-    }
+    // Selection is now silent - no log output
   },
 
   toggleSelectedId: (id) => set((state) => {

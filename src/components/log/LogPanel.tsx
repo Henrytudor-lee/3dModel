@@ -132,8 +132,8 @@ export default function LogPanel() {
       panelRef.current.style.left = '24px';
       panelRef.current.style.top = 'auto';
       panelRef.current.style.bottom = '24px';
-      panelRef.current.style.width = '320px';
-      panelRef.current.style.height = '192px';
+      panelRef.current.style.width = '340px';
+      panelRef.current.style.height = '240px';
     }
   }, []);
 
@@ -163,8 +163,8 @@ export default function LogPanel() {
       style={{
         left: 24,
         bottom: 24,
-        width: 320,
-        height: 192,
+        width: 340,
+        height: 240,
         cursor: isDragging.current ? 'grabbing' : 'default',
       }}
     >
@@ -245,7 +245,7 @@ export default function LogPanel() {
                 {getTypeIcon(entry.type)}
               </span>
               <div className="flex-1 min-w-0">
-                <div className={`${getTypeColor(entry.type)} truncate`}>
+                <div className={`${getTypeColor(entry.type)} whitespace-pre-wrap text-[11px] leading-4`} style={{ wordBreak: 'break-word' }}>
                   {entry.message}
                 </div>
                 <div className={`text-[10px] ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
