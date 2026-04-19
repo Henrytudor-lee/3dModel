@@ -297,8 +297,8 @@ function SceneObject3D({
           <cylinderGeometry args={[0.02, 0.02, length, 8]} />
           <meshBasicMaterial
             color={isSelected ? "#00d9ff" : material.color}
-            transparent={isSelected || material.opacity < 1}
-            opacity={isSelected ? 0.8 : material.opacity}
+            transparent={isSelected}
+            opacity={isSelected ? 0.8 : 1}
           />
         </mesh>
       );
@@ -480,8 +480,8 @@ function SceneObject3D({
         <mesh geometry={tubeGeometry} onClick={onClick}>
           <meshBasicMaterial
             color={isSelected ? "#00d9ff" : material.color}
-            transparent={isSelected || material.opacity < 1}
-            opacity={isSelected ? 0.8 : material.opacity}
+            transparent={isSelected}
+            opacity={isSelected ? 0.8 : 1}
           />
         </mesh>
       </group>
