@@ -560,7 +560,7 @@ function GroundPlane({
     <mesh
       ref={planeRef}
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, -1000, 0]}
+      position={[0, 0, 0]}
       onPointerMove={handlePointerMove}
       onClick={handleClick}
     >
