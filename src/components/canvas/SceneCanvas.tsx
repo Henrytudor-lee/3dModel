@@ -1183,6 +1183,33 @@ function SceneContent({
   >([0, 0, 0]);
   const { scene, camera, gl } = useThree();
 
+  // Compute grid size based on objects bounding box
+  const gridSize = useMemo(() => {
+    if (objects.length === 0) return 20;
+
+    let minX = Infinity, maxX = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+
+    for (const obj of objects) {
+      const vertices = getMeshVerticesForSnap(obj);
+      for (const [x, y, z] of vertices) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+      }
+    }
+
+    // Add padding
+    const padding = 5;
+    const width = Math.max(20, maxX - minX + padding * 2);
+    const height = Math.max(20, maxZ - minZ + padding * 2);
+
+    // Round up to nearest 10
+    const size = Math.ceil(Math.max(width, height) / 10) * 10;
+    return Math.max(size, 20);
+  }, [objects]);
+
   // Update scene background when theme changes
   useEffect(() => {
     scene.background = new THREE.Color(
@@ -1443,7 +1470,7 @@ function SceneContent({
 
       {/* Grid */}
       <Grid
-        args={[20, 20]}
+        args={[gridSize, gridSize]}
         cellSize={1}
         cellColor="#333"
         sectionSize={5}
