@@ -624,17 +624,44 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       return obj ? deepClone(obj) : null;
     }).filter((o): o is SceneObject => o !== null);
 
-    // Move each selected object by the delta
-    state.selectedIds.forEach(id => {
-      const obj = state.objects.find(o => o.id === id);
-      if (obj) {
-        const newPosition: [number, number, number] = [
-          obj.transform.position[0] + delta[0],
-          obj.transform.position[1] + delta[1],
-          obj.transform.position[2] + delta[2],
-        ];
-        get().updateObject(id, { transform: { ...obj.transform, position: newPosition } }, `Move ${obj.name}`);
+    // Move each selected object by the delta - directly update without logging
+    const newObjects = state.objects.map(obj => {
+      if (state.selectedIds.includes(obj.id)) {
+        const idx = state.selectedIds.indexOf(obj.id);
+        const original = originalObjects[idx];
+        if (original) {
+          return {
+            ...obj,
+            transform: {
+              ...obj.transform,
+              position: [
+                original.transform.position[0] + delta[0],
+                original.transform.position[1] + delta[1],
+                original.transform.position[2] + delta[2],
+              ] as [number, number, number],
+            },
+          };
+        }
       }
+      return obj;
+    });
+
+    // Create operation for undo
+    const op = createOperation(
+      'UPDATE',
+      'Move objects',
+      state.selectedIds,
+      originalObjects,
+      newObjects.filter(o => state.selectedIds.includes(o.id))
+    );
+
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(op);
+
+    set({
+      objects: newObjects,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
     });
 
     // Log the move with detailed info
@@ -653,17 +680,50 @@ export const useSceneStore = create<SceneState>((set, get) => ({
     const state = get();
     if (state.selectedIds.length === 0) return;
 
-    // Scale each selected object
-    state.selectedIds.forEach(id => {
+    // Clone objects before modification for undo
+    const originalObjects = state.selectedIds.map(id => {
       const obj = state.objects.find(o => o.id === id);
-      if (obj) {
-        const newScale: [number, number, number] = [
-          obj.transform.scale[0] * scaleFactor,
-          obj.transform.scale[1] * scaleFactor,
-          obj.transform.scale[2] * scaleFactor,
-        ];
-        get().updateObject(id, { transform: { ...obj.transform, scale: newScale } }, `Scale ${obj.name}`);
+      return obj ? deepClone(obj) : null;
+    }).filter((o): o is SceneObject => o !== null);
+
+    // Scale each selected object - directly update without logging
+    const newObjects = state.objects.map(obj => {
+      if (state.selectedIds.includes(obj.id)) {
+        const idx = state.selectedIds.indexOf(obj.id);
+        const original = originalObjects[idx];
+        if (original) {
+          return {
+            ...obj,
+            transform: {
+              ...obj.transform,
+              scale: [
+                original.transform.scale[0] * scaleFactor,
+                original.transform.scale[1] * scaleFactor,
+                original.transform.scale[2] * scaleFactor,
+              ] as [number, number, number],
+            },
+          };
+        }
       }
+      return obj;
+    });
+
+    // Create operation for undo
+    const op = createOperation(
+      'UPDATE',
+      'Scale objects',
+      state.selectedIds,
+      originalObjects,
+      newObjects.filter(o => state.selectedIds.includes(o.id))
+    );
+
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push(op);
+
+    set({
+      objects: newObjects,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
     });
 
     // Log the scale with detailed info
