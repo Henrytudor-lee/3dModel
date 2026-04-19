@@ -164,19 +164,33 @@ export default function PropertiesPanel() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Opacity</label>
-            <span className={`text-[10px] font-mono ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {Math.round((selectedObject.material.opacity ?? 1) * 100)}%
-            </span>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={Math.round((selectedObject.material.opacity ?? 1) * 100)}
+                onChange={(e) => {
+                  const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                  handleMaterialChange('opacity', val / 100);
+                }}
+                className={`w-12 h-6 px-1 text-center border rounded text-[10px] font-mono focus:outline-none ${isDark ? 'bg-black/40 border-white/10 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+              />
+              <span className={`text-[10px] font-mono ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>%</span>
+            </div>
           </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={(selectedObject.material.opacity ?? 1) * 100}
-            onChange={(e) => handleMaterialChange('opacity', parseFloat(e.target.value) / 100)}
-            className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-            style={{ accentColor: typeColor }}
-          />
+          <div className="relative">
+            <div className={`absolute inset-0 h-2 rounded-full my-auto ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={(selectedObject.material.opacity ?? 1) * 100}
+              onChange={(e) => handleMaterialChange('opacity', parseFloat(e.target.value) / 100)}
+              className="relative w-full h-2 appearance-none cursor-pointer bg-transparent"
+              style={{ accentColor: typeColor }}
+            />
+          </div>
         </div>
 
         {/* Transform Section */}
