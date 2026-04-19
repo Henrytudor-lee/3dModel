@@ -532,11 +532,9 @@ function SceneObject3D({
 function GroundPlane({
   onClick,
   onMove,
-  activeTool,
 }: {
   onClick: (point: [number, number, number]) => void;
   onMove: (point: [number, number, number]) => void;
-  activeTool: string | null;
 }) {
   const planeRef = useRef<THREE.Mesh>(null);
 
@@ -551,13 +549,11 @@ function GroundPlane({
 
   const handleClick = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
-      // In select mode, don't handle ground click so models below y=0 can be selected
-      if (activeTool === 'select') return;
       event.stopPropagation();
       const point = event.point;
       onClick([point.x, 0, point.z]);
     },
-    [onClick, activeTool],
+    [onClick],
   );
 
   return (
@@ -1456,7 +1452,7 @@ function SceneContent({
       </group>
 
       {/* Ground plane for click detection */}
-      <GroundPlane onClick={onGroundClick} onMove={handleMouseMove} activeTool={activeTool} />
+      <GroundPlane onClick={onGroundClick} onMove={handleMouseMove} />
 
       {/* Drawing preview */}
       <DrawingPreview
