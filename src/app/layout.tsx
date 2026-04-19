@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="h-full overflow-hidden">
+      <body className="h-screen overflow-hidden">
         <AuthInitializer />
         <I18nProvider>
           <ThemeProvider>{children}</ThemeProvider>

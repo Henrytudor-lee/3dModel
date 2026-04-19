@@ -39,7 +39,7 @@ export async function chatWithAI(
 
   const requestBody: any = {
     model,
-    max_tokens: 1024,
+    max_tokens: 8192,
     messages: anthropicMessages,
   };
 
@@ -78,19 +78,26 @@ export async function chatWithAI(
 // Prompt template for 3D modeling
 export const MODELING_SYSTEM_PROMPT = `You are a 3D modeling assistant. Your task is to understand the user's natural language description of a 3D model operation and convert it into structured JSON data.
 
-You MUST respond with ONLY a valid JSON object in this exact format, no other text:
+You MUST respond with valid JSON. For creating multiple objects, use an array of action objects wrapped in {"actions": [...]}:
+{"actions": [
+  {"action":"create","object":{...}},
+  {"action":"create","object":{...}}
+]}
+
+Or you can return multiple separate JSON objects - the system will process all of them.
 
 // For CREATE action:
 {
   "action": "create",
   "object": {
-    "type": "box" | "sphere" | "cylinder" | "prism",
+    "type": "box" | "sphere" | "cylinder" | "prism" | "custom",
     "name": "object_name",
     "geometry": {
       // For box: width, height, depth
       // For sphere: radius, segments
       // For cylinder: radiusTop, radiusBottom, height, segments
       // For prism: radius, height, sides, segments
+      // For custom: vertices (flat array [x1,y1,z1,x2,y2,z2,...]), indices (face indices [i1,i2,i3,i4,...])
     },
     "transform": {
       "position": [x, y, z],
@@ -106,6 +113,17 @@ You MUST respond with ONLY a valid JSON object in this exact format, no other te
   },
   "reasoning": "brief explanation"
 }
+
+// IMPORTANT: For complex models (screw, bolt, gear, spring, thread, etc.), use type "custom" and provide:
+// - vertices: number[] - flat array of vertex positions [x1,y1,z1,x2,y2,z2,...]
+// - indices: number[] - face indices for triangulated mesh [i1,i2,i3,i4,i5,i6,...]
+// Example for a simple pyramid:
+// {"type":"custom","name":"Pyramid_01","geometry":{"vertices":[0,1,0,1,0,0,-1,0,0,0,0,1,0,0,-1],"indices":[0,1,2,0,2,3,0,3,4,0,4,1,1,3,2,1,4,3]},"transform":{"position":[0,0,0],"rotation":[0,0,0],"scale":[1,1,1]},"material":{"color":"#708090","opacity":1,"type":"metal","wireframe":false}}
+
+// IMPORTANT: NEVER use "complex/carve" action. It does not work correctly for screw/bolt/gear/spring.
+// IMPORTANT: NEVER use "group" action when creating new objects - always provide complete geometry in "custom" type.
+// IMPORTANT: For requests like "create a screw", create ONE cylinder with hexagonal prism on top (simple screw shape without threads).
+// For a simple screw: use standard cylinder type with proper radiusTop/radiusBottom/height geometry instead of custom.
 
 // For MODIFY action (change properties of existing object):
 {
@@ -212,6 +230,8 @@ Rules:
 - Colors should be in hex format like "#4a90d9"
 - Object names should be descriptive like "Cube_01", "Sphere_02"
 - For boolean operations, exactly 2 objects must be referenced
+- IMPORTANT: For simple shape requests (screw, bolt, nail, etc.), create ONE appropriate primitive (usually cylinder) - do NOT try to create multiple parts and group them
+- IMPORTANT: Only use "group" action when the user explicitly asks to group EXISTING objects - never assume objects exist when creating new ones
 - For group, at least 2 objects must be referenced
 - Default visible is true
 - For Minecraft-style boat or carved objects, use "complex" action with "carve" subAction

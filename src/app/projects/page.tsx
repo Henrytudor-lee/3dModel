@@ -61,9 +61,9 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-sans">
+    <div className="h-full flex flex-col bg-[#0b1326] text-[#dae2fd] font-sans">
       {/* TopNavBar */}
-      <nav className="bg-[#0b1326]/80 backdrop-blur-xl border-b border-[#3b494c]/10 text-[#00e5ff] font-medium flex justify-between items-center w-full px-8 h-16 fixed top-0 z-50">
+      <nav className="bg-[#0b1326]/80 backdrop-blur-xl border-b border-[#3b494c]/10 text-[#00e5ff] font-medium flex justify-between items-center w-full px-8 h-16 shrink-0">
         <Link href="/"><img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" /></Link>
         <div className="flex items-center gap-4">
           <button
@@ -75,119 +75,94 @@ export default function ProjectsPage() {
         </div>
       </nav>
 
-      <main className="pt-24 pb-16 px-8 max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto px-8 py-8 max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-slate-100 tracking-tight mb-2">Projects</h1>
-            <p className="text-[#bac9cc]">Manage and organize your 3D workspaces</p>
+            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Projects</h1>
+            <p className="text-[#bac9cc] text-sm">Manage and organize your 3D workspaces</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icons.search /></span>
-              <input
-                className="bg-[#131b2e] border border-[#3b494c]/20 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-[#00e5ff]/50 w-64"
-                placeholder="Search projects..."
-                type="text"
-              />
-            </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icons.search /></span>
+            <input
+              className="bg-[#131b2e] border border-[#3b494c]/20 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-[#00e5ff]/50 w-48"
+              placeholder="Search..."
+              type="text"
+            />
           </div>
         </div>
 
         {/* User Projects Section */}
-        <div className="mb-16">
-          <h2 className="text-xl font-bold text-slate-100 mb-6 flex items-center gap-3">
-            <svg className="w-5 h-5 text-[#00e5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            My Projects
-            <span className="text-sm font-normal text-slate-500">({projects.length})</span>
-          </h2>
-
-          {/* User Project Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* New Project Card */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-3">
+              <svg className="w-5 h-5 text-[#00e5ff]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              My Projects
+              <span className="text-sm font-normal text-slate-500">({projects.length})</span>
+            </h2>
             <button
               onClick={() => setShowNewProjectModal(true)}
-              className="group border-2 border-dashed border-[#3b494c]/30 rounded-3xl p-5 hover:border-[#00e5ff]/50 hover:bg-[#00e5ff]/5 transition-all flex flex-col items-center justify-center min-h-[300px]"
+              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#00363d] rounded-lg font-bold text-sm hover:brightness-110 transition-all"
             >
-              <div className="w-16 h-16 rounded-full bg-[#222a3d] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <span className="text-[#00e5ff]"><Icons.plus /></span>
-              </div>
-              <h3 className="text-slate-300 font-bold mb-1">Create New Project</h3>
-              <p className="text-slate-500 text-sm">Start from a blank canvas</p>
+              <Icons.plus />
+              Create New
             </button>
+          </div>
 
-            {/* User Project Cards */}
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => handleOpenProject(project)}
-                className="group bg-[#171f33] border border-[#3b494c]/10 rounded-3xl p-5 hover:border-[#00e5ff]/30 transition-all duration-300 flex flex-col h-full cursor-pointer"
-              >
-                <div className="relative aspect-video rounded-2xl overflow-hidden mb-5 bg-[#060e20]">
-                  {project.thumbnail ? (
-                    <img
-                      src={project.thumbnail}
-                      alt={project.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-600">
-                      <Icons.box />
+          {/* User Project Cards - Horizontal Scroll */}
+          {projects.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  onClick={() => handleOpenProject(project)}
+                  className="group flex-shrink-0 w-72 bg-[#171f33] border border-[#3b494c]/10 rounded-2xl p-4 hover:border-[#00e5ff]/30 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-[#060e20]">
+                    {project.thumbnail ? (
+                      <img src={project.thumbnail} alt={project.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-600">
+                        <Icons.box />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <span className="w-full bg-[#00e5ff] text-[#00363d] py-1.5 rounded-lg text-xs font-bold text-center">
+                        Open
+                      </span>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                    <button className="w-full bg-[#00e5ff] text-[#00363d] py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
-                      Open Workspace
-                    </button>
                   </div>
-                </div>
 
-                <div className="flex justify-between items-start mb-4">
-                  <div className="min-w-0">
-                    <h3 className="text-slate-100 font-bold truncate group-hover:text-[#00e5ff] transition-colors">
-                      {project.name}
-                    </h3>
-                    <p className="text-xs text-[#bac9cc]">
-                      Updated {new Date(project.updated_at).toLocaleDateString()} • {project.scene_data?.objects?.length || 0} objects
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="text-slate-100 font-bold truncate group-hover:text-[#00e5ff] transition-colors">
+                        {project.name}
+                      </h3>
+                      <p className="text-xs text-[#bac9cc] mt-1">
+                        {project.scene_data?.objects?.length || 0} objects
+                      </p>
+                    </div>
                     <button
                       onClick={(e) => handleDeleteProject(project.id, e)}
-                      className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                      className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all flex-shrink-0"
                       title="Delete project"
                     >
                       <Icons.delete />
                     </button>
                   </div>
                 </div>
-
-                <div className="mt-auto pt-4 border-t border-[#3b494c]/10 flex items-center justify-between">
-                  <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-[#171f33] bg-slate-700 flex items-center justify-center text-[10px] text-white">
-                      {project.name.charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-[#849396] uppercase tracking-widest bg-slate-800/50 px-2 py-1 rounded">
-                    Private
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Empty State */}
-          {projects.length === 0 && !projectsLoading && (
-            <div className="text-center py-16">
-              <div className="mb-4 flex justify-center text-slate-500"><Icons.palette /></div>
-              <h3 className="text-xl font-bold text-slate-100 mb-2">No projects yet</h3>
-              <p className="text-[#bac9cc] mb-6">Create your first project to get started</p>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 bg-[#171f33]/50 rounded-2xl border border-dashed border-[#3b494c]/30">
+              <div className="mb-3 text-slate-500"><Icons.palette /></div>
+              <p className="text-slate-400 text-sm mb-4">No projects yet</p>
               <button
                 onClick={() => setShowNewProjectModal(true)}
-                className="bg-[#00e5ff] text-[#00363d] px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-widest hover:brightness-110 transition-all"
+                className="px-4 py-2 bg-[#00e5ff] text-[#00363d] rounded-lg font-bold text-sm hover:brightness-110 transition-all"
               >
                 Create First Project
               </button>
@@ -206,66 +181,48 @@ export default function ProjectsPage() {
               <span className="text-sm font-normal text-slate-500">({sampleProjects.length})</span>
             </h2>
 
-            {/* Sample Project Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Sample Project Cards - Horizontal Scroll */}
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
               {sampleProjects.map((project) => (
                 <div
                   key={project.id}
                   onClick={() => handleOpenProject(project)}
-                  className="group bg-[#1a1525] border border-[#a855f7]/20 rounded-3xl p-5 hover:border-[#a855f7]/40 hover:bg-[#1a1525]/80 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden"
+                  className="group flex-shrink-0 w-72 bg-[#1a1525] border border-[#a855f7]/20 rounded-2xl p-4 hover:border-[#a855f7]/40 transition-all duration-300 cursor-pointer relative overflow-hidden"
                 >
-                  {/* Decorative gradient */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#a855f7]/20 to-transparent rounded-bl-full" />
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#a855f7]/20 to-transparent rounded-bl-full" />
 
-                  <div className="relative aspect-video rounded-2xl overflow-hidden mb-5 bg-[#0f0a15]">
+                  <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-[#0f0a15]">
                     {project.thumbnail ? (
-                      <img
-                        src={project.thumbnail}
-                        alt={project.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={project.thumbnail} alt={project.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-600">
                         <Icons.box />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                      <button className="w-full bg-[#a855f7] text-white py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
-                        Open Workspace
-                      </button>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <span className="w-full bg-[#a855f7] text-white py-1.5 rounded-lg text-xs font-bold text-center">
+                        Open
+                      </span>
                     </div>
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-2 right-2">
                       <span className="text-[10px] font-bold text-[#a855f7] uppercase tracking-widest bg-[#a855f7]/20 px-2 py-1 rounded backdrop-blur-sm">
                         Sample
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="min-w-0">
-                      <h3 className="text-slate-100 font-bold truncate group-hover:text-[#a855f7] transition-colors">
-                        {project.name}
-                      </h3>
-                      {project.description && (
-                        <p className="text-xs text-slate-400 line-clamp-2 mt-1">
-                          {project.description}
-                        </p>
-                      )}
-                      <p className="text-xs text-[#bac9cc] mt-2">
-                        {project.scene_data?.objects?.length || 0} objects
+                  <div className="min-w-0">
+                    <h3 className="text-slate-100 font-bold truncate group-hover:text-[#a855f7] transition-colors">
+                      {project.name}
+                    </h3>
+                    {project.description && (
+                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">
+                        {project.description}
                       </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-4 border-t border-[#a855f7]/10 flex items-center justify-between">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full border-2 border-[#1a1525] bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center text-[10px] text-white">
-                        <Icons.sparkles />
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold text-[#a855f7] uppercase tracking-widest bg-[#a855f7]/10 px-2 py-1 rounded">
-                      Sample
-                    </span>
+                    )}
+                    <p className="text-xs text-[#bac9cc] mt-2">
+                      {project.scene_data?.objects?.length || 0} objects
+                    </p>
                   </div>
                 </div>
               ))}

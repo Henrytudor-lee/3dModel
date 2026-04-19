@@ -41,7 +41,7 @@ export type SceneData = {
 export type SerializedObject = {
   id: string;
   name: string;
-  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'circle' | 'group' | 'csgresult';
+  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'circle' | 'group' | 'csgresult' | 'custom';
   geometry: Record<string, number | number[]>;
   transform: {
     position: [number, number, number];

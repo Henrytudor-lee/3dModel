@@ -178,14 +178,6 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {!isRegisterMode && (
-                <div className="flex items-center justify-end">
-                  <a className="text-xs text-[#00e5ff] hover:text-[#00daf3] transition-colors font-bold tracking-wide" href="#">
-                    {t('auth.forgotAccess')}
-                  </a>
-                </div>
-              )}
-
               {error && (
                 <div className="text-red-400 text-sm text-center py-2 px-4 bg-red-400/10 rounded-lg border border-red-400/20">
                   {error}

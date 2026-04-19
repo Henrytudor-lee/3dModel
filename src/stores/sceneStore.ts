@@ -6,7 +6,7 @@ import { useLogStore } from './logStore';
 export interface SceneObject {
   id: string;
   name: string;
-  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'circle' | 'group' | 'csgresult';
+  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'line' | 'curve' | 'polygon' | 'circle' | 'group' | 'csgresult' | 'custom';
   geometry: Record<string, number | number[]>;
   meshGeometry?: THREE.BufferGeometry; // For storing generated CSG geometry
   transform: {
@@ -214,11 +214,15 @@ function getCreationMessage(obj: SceneObject): string {
       break;
     }
     case 'cylinder': {
-      const radius = geometry.radius as number;
+      const radius = (geometry.radius as number) || ((geometry.radiusTop as number) + (geometry.radiusBottom as number)) / 2;
       const height = geometry.height as number;
       const pos = transform.position;
       msg += `\nCenter: ${formatPosition(pos)}`;
-      msg += `\nRadius: ${radius.toFixed(2)}`;
+      if (geometry.radiusTop !== undefined && geometry.radiusBottom !== undefined) {
+        msg += `\nRadius: ${(geometry.radiusTop as number).toFixed(2)} → ${(geometry.radiusBottom as number).toFixed(2)}`;
+      } else {
+        msg += `\nRadius: ${radius.toFixed(2)}`;
+      }
       msg += `\nHeight: ${height.toFixed(2)}`;
       break;
     }
@@ -258,6 +262,12 @@ function getCreationMessage(obj: SceneObject): string {
       msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
       msg += `\nArea: ${area.toFixed(2)}`;
       msg += `\nVertices: ${segmentCount}`;
+      break;
+    }
+    case 'custom': {
+      const vertices = geometry.vertices as number[] | undefined;
+      const vertexCount = vertices ? vertices.length / 3 : 0;
+      msg += `\nCustom mesh with ${vertexCount} vertices`;
       break;
     }
     default:

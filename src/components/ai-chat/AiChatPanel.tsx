@@ -6,9 +6,9 @@ import { useSceneStore, SceneObject } from '@/stores/sceneStore';
 import { useI18n } from '@/i18n';
 
 interface ParsedObject {
-  type: 'box' | 'sphere' | 'cylinder' | 'prism';
+  type: 'box' | 'sphere' | 'cylinder' | 'prism' | 'custom';
   name: string;
-  geometry: Record<string, number>;
+  geometry: Record<string, number | number[]>;
   transform: {
     position: [number, number, number];
     rotation: [number, number, number];
@@ -104,16 +104,40 @@ export default function AiChatPanel() {
     }
   }, [isOpen]);
 
-  const parseAIResponse = (content: string): ParsedResponse | null => {
+  const parseAIResponse = (content: string): ParsedResponse[] => {
     try {
-      // Try to extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      // First try: check if response is a wrapper with "actions" array
+      try {
+        const wrapper = JSON.parse(content);
+        if (wrapper.actions && Array.isArray(wrapper.actions)) {
+          return wrapper.actions.filter((a: any) => a && a.action);
+        }
+        if (wrapper.action) {
+          return [wrapper];
+        }
+      } catch {
+        // Not a single JSON, continue to multi-match
       }
-      return null;
+
+      // Second try: extract all separate JSON objects
+      const results: ParsedResponse[] = [];
+      // Match each {...} block
+      const jsonMatches = content.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+      if (jsonMatches) {
+        for (const match of jsonMatches) {
+          try {
+            const parsed = JSON.parse(match);
+            if (parsed.action) {
+              results.push(parsed);
+            }
+          } catch {
+            // Skip invalid JSON
+          }
+        }
+      }
+      return results;
     } catch {
-      return null;
+      return [];
     }
   };
 
@@ -185,8 +209,9 @@ export default function AiChatPanel() {
       }
 
       // Try to parse and execute actions
-      const parsed = parseAIResponse(aiContent);
-      const objects = useSceneStore.getState().objects;
+      const parsedResponses = parseAIResponse(aiContent);
+      let objects = useSceneStore.getState().objects;
+      const createdObjects: string[] = [];
 
       // Helper to find objects by name (partial matching)
       const findObjectByName = (name: string) => {
@@ -203,9 +228,9 @@ export default function AiChatPanel() {
         });
       };
 
-      if (parsed) {
-        let responseMessage = '';
+      let responseMessage = '';
 
+      for (const parsed of parsedResponses) {
         switch (parsed.action) {
           case 'create':
             if (parsed.object) {
@@ -234,7 +259,9 @@ export default function AiChatPanel() {
                 },
                 `Create ${finalName} via AI`
               );
-              responseMessage = `I've created a ${finalName} for you in the scene! You can adjust its properties in the right panel.`;
+              createdObjects.push(finalName);
+              // Update objects reference for subsequent finds
+              objects = useSceneStore.getState().objects;
             }
             break;
 
@@ -381,14 +408,18 @@ export default function AiChatPanel() {
           case 'group':
             if (parsed.targets && parsed.targets.length >= 2) {
               const matchedIds: string[] = [];
+              const notFound: string[] = [];
               for (const targetName of parsed.targets) {
                 const obj = findObjectByName(targetName);
                 if (obj) matchedIds.push(obj.id);
+                else notFound.push(targetName);
               }
               if (matchedIds.length >= 2) {
                 sceneStore.setSelectedIds(matchedIds);
                 sceneStore.groupSelected();
                 responseMessage = `I've grouped ${matchedIds.length} objects.`;
+              } else if (notFound.length > 0) {
+                responseMessage = `I couldn't find objects: ${notFound.join(', ')}. Please create them first using commands like "create a cylinder" or "create a box".`;
               } else {
                 responseMessage = `I need at least 2 objects to group. Found: ${matchedIds.length}`;
               }
@@ -485,13 +516,17 @@ export default function AiChatPanel() {
           default:
             responseMessage = `I'm not sure how to "${parsed.action}". I can help with creating, modifying, deleting, selecting, duplicating, hiding, showing, grouping, ungrouping, boolean operations, undo, redo, and carving complex shapes.`;
         }
+      }
 
-        if (responseMessage) {
-          addMessage({
-            role: 'assistant',
-            content: responseMessage,
-          });
-        }
+      // Send final response message after all actions processed
+      if (createdObjects.length > 0) {
+        const summary = createdObjects.length === 1
+          ? `I've created ${createdObjects[0]} for you in the scene!`
+          : `I've created ${createdObjects.length} objects for you: ${createdObjects.join(', ')}!`;
+        addMessage({
+          role: 'assistant',
+          content: summary,
+        });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -509,6 +544,35 @@ export default function AiChatPanel() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
+    }
+  };
+
+  // Handle keyboard shortcuts for copy/paste in messages area
+  const handleContainerKeyDown = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'c') {
+        e.preventDefault();
+        const selection = window.getSelection();
+        if (selection && selection.toString()) {
+          navigator.clipboard.writeText(selection.toString());
+        }
+      } else if (e.key === 'v') {
+        e.preventDefault();
+        navigator.clipboard.readText().then(text => {
+          if (inputRef.current && !inputRef.current.disabled) {
+            const start = inputRef.current.selectionStart;
+            const end = inputRef.current.selectionEnd;
+            const newValue = input.substring(0, start) + text + input.substring(end);
+            setInput(newValue);
+            // Restore cursor position after paste
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.selectionStart = inputRef.current.selectionEnd = start + text.length;
+              }
+            }, 0);
+          }
+        });
+      }
     }
   };
 
@@ -597,7 +661,12 @@ export default function AiChatPanel() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          tabIndex={0}
+          onClick={(e) => e.currentTarget.focus()}
+          onKeyDown={handleContainerKeyDown}
+        >
           {messages.length === 0 && (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#00d9ff]/20 to-[#a855f7]/20 flex items-center justify-center">
@@ -646,7 +715,7 @@ export default function AiChatPanel() {
                   }`}
                 >
                   <div className={`relative ${!isExpanded && truncated ? 'max-h-48 overflow-hidden' : ''}`}>
-                    <p className="text-sm whitespace-pre-wrap break-words">
+                    <p className="text-sm whitespace-pre-wrap break-words" style={{ userSelect: 'text' }}>
                       {displayContent}
                       {isStreaming && (
                         <span className="inline-block w-2 h-4 ml-1 bg-[#00d9ff] animate-pulse" />

@@ -1143,6 +1143,38 @@ function PastePreview({
           );
         }
 
+        if (obj.type === "custom") {
+          const vertices = obj.geometry.vertices as number[];
+          const indices = obj.geometry.indices as number[] | undefined;
+          if (vertices && vertices.length > 0) {
+            // Create geometry imperatively to avoid R3F typing issues
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            if (indices && indices.length > 0) {
+              geometry.setIndex(indices);
+            }
+            geometry.computeVertexNormals();
+
+            return (
+              <mesh
+                key={obj.id}
+                geometry={geometry}
+                position={offsetPos}
+                rotation={obj.transform.rotation}
+                scale={obj.transform.scale}
+              >
+                <meshStandardMaterial
+                  color={obj.material.color}
+                  opacity={obj.material.opacity}
+                  transparent={obj.material.opacity < 1}
+                  wireframe={obj.material.wireframe}
+                />
+              </mesh>
+            );
+          }
+          return null;
+        }
+
         return null;
       })}
     </>
