@@ -1574,10 +1574,11 @@ function SceneContent({
               });
               return;
             }
-            // When in moveBase phase and clicking on a selected object, execute move
+            // When in moveBase phase, clicking on any object (selected or not) executes the move
+            // This allows using any model's surface as the target point without changing selection
             if (
-              drawingState.phase === "moveBase" &&
-              selectedIds.includes(obj.id)
+              activeTool === "move" &&
+              drawingState.phase === "moveBase"
             ) {
               const basePoint = drawingState.point1;
               if (basePoint) {
@@ -1585,10 +1586,6 @@ function SceneContent({
               }
               resetDrawing();
               setActiveTool("select");
-              return;
-            }
-            // In move mode with non-idle phase, ignore clicks on non-selected objects
-            if (activeTool === "move" && drawingState.phase !== "idle") {
               return;
             }
             if (e.ctrlKey || e.metaKey) {
