@@ -145,48 +145,132 @@ function getObjectEdgeMidpoints(obj: SceneObject): [number, number, number][] {
   return [];
 }
 
-// Helper to format geometry details
-function formatGeometry(obj: SceneObject): string {
-  const { geometry, type } = obj;
-  switch (type) {
-    case 'box':
-      return `W${(geometry.width as number)?.toFixed(1) || '?'} × H${(geometry.height as number)?.toFixed(1) || '?'} × D${(geometry.depth as number)?.toFixed(1) || '?'}`;
-    case 'sphere':
-      return `r${(geometry.radius as number)?.toFixed(1) || '?'}`;
-    case 'cylinder':
-    case 'prism':
-      const sides = geometry.sides as number;
-      return `r${(geometry.radius as number)?.toFixed(1) || '?'}, ${sides}-sided`;
-    default:
-      return '';
-  }
-}
-
 // Helper to format position
 function formatPosition(pos: [number, number, number]): string {
   return `(${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)})`;
 }
 
-// Helper to format material
-function formatMaterial(mat: SceneObject['material']): string {
-  const typeStr = mat.type !== 'standard' ? `, ${mat.type}` : '';
-  const opacityStr = mat.opacity < 1 ? `, ${(mat.opacity * 100).toFixed(0)}% opacity` : '';
-  const wireStr = mat.wireframe ? ', wireframe' : '';
-  return `${mat.color}${typeStr}${opacityStr}${wireStr}`;
+// Helper to calculate line length
+function calculateLineLength(points: [number, number, number][]): number {
+  let total = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const dx = points[i + 1][0] - points[i][0];
+    const dy = points[i + 1][1] - points[i][1];
+    const dz = points[i + 1][2] - points[i][2];
+    total += Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+  return total;
+}
+
+// Helper to calculate polygon area (shoelace formula for 2D projection)
+function calculatePolygonArea(points: [number, number, number][]): number {
+  let area = 0;
+  const n = points.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += points[i][0] * points[j][2];
+    area -= points[j][0] * points[i][2];
+  }
+  return Math.abs(area) / 2;
 }
 
 // Generate detailed creation log message
 function getCreationMessage(obj: SceneObject): string {
-  const geomInfo = formatGeometry(obj);
-  const posInfo = formatPosition(obj.transform.position);
-  const matInfo = formatMaterial(obj.material);
+  const { geometry, type, name, transform, material } = obj;
+  let msg = `Created ${name}`;
+  msg += `\nType: ${type}`;
 
-  // Multi-line detailed message
-  let msg = `Created ${obj.name}`;
-  msg += `\nType: ${obj.type}`;
-  if (geomInfo) msg += `\nSize: ${geomInfo}`;
-  msg += `\nPosition: ${posInfo}`;
-  msg += `\nMaterial: ${matInfo}`;
+  switch (type) {
+    case 'line': {
+      const points = geometry.points as unknown as [number, number, number][];
+      const firstPoint = points[0];
+      const segmentCount = points.length - 1;
+      const totalLength = calculateLineLength(points);
+      msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
+      msg += `\nLength: ${totalLength.toFixed(2)}`;
+      msg += `\nSegments: ${segmentCount}`;
+      break;
+    }
+    case 'curve': {
+      const points = geometry.points as unknown as [number, number, number][];
+      const firstPoint = points[0];
+      const totalLength = calculateLineLength(points);
+      msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
+      msg += `\nLength: ${totalLength.toFixed(2)}`;
+      break;
+    }
+    case 'circle': {
+      const radius = geometry.radius as number;
+      const pos = transform.position;
+      msg += `\nCenter: ${formatPosition(pos)}`;
+      msg += `\nRadius: ${radius.toFixed(2)}`;
+      break;
+    }
+    case 'sphere': {
+      const radius = geometry.radius as number;
+      const pos = transform.position;
+      msg += `\nCenter: ${formatPosition(pos)}`;
+      msg += `\nRadius: ${radius.toFixed(2)}`;
+      break;
+    }
+    case 'cylinder': {
+      const radius = geometry.radius as number;
+      const height = geometry.height as number;
+      const pos = transform.position;
+      msg += `\nCenter: ${formatPosition(pos)}`;
+      msg += `\nRadius: ${radius.toFixed(2)}`;
+      msg += `\nHeight: ${height.toFixed(2)}`;
+      break;
+    }
+    case 'box': {
+      const width = geometry.width as number;
+      const height = geometry.height as number;
+      const depth = geometry.depth as number;
+      const pos = transform.position;
+      const firstPoint: [number, number, number] = [
+        pos[0] - width / 2,
+        pos[1] - height / 2,
+        pos[2] - depth / 2
+      ];
+      msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
+      msg += `\nSize: ${width.toFixed(2)} × ${height.toFixed(2)} × ${depth.toFixed(2)}`;
+      break;
+    }
+    case 'prism': {
+      const radius = geometry.radius as number;
+      const height = geometry.height as number;
+      const pos = transform.position;
+      const firstPoint: [number, number, number] = [
+        pos[0] - radius,
+        pos[1],
+        pos[2] - radius
+      ];
+      msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
+      msg += `\nRadius: ${radius.toFixed(2)}`;
+      msg += `\nHeight: ${height.toFixed(2)}`;
+      break;
+    }
+    case 'polygon': {
+      const points = geometry.points as unknown as [number, number, number][];
+      const firstPoint = points[0];
+      const area = calculatePolygonArea(points);
+      const segmentCount = points.length;
+      msg += `\nFirst Point: ${formatPosition(firstPoint)}`;
+      msg += `\nArea: ${area.toFixed(2)}`;
+      msg += `\nVertices: ${segmentCount}`;
+      break;
+    }
+    default:
+      // For unknown types, just show position
+      msg += `\nPosition: ${formatPosition(transform.position)}`;
+  }
+
+  // Material info
+  const matTypeStr = material.type !== 'standard' ? `, ${material.type}` : '';
+  const matOpacityStr = material.opacity < 1 ? `, ${(material.opacity * 100).toFixed(0)}% opacity` : '';
+  const matWireStr = material.wireframe ? ', wireframe' : '';
+  msg += `\nMaterial: ${material.color}${matTypeStr}${matOpacityStr}${matWireStr}`;
+
   return msg;
 }
 
@@ -553,8 +637,16 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       }
     });
 
-    // Log the move
-    useLogStore.getState().addLog(`Moved ${state.selectedIds.length} object(s) by [${delta[0].toFixed(2)}, ${delta[1].toFixed(2)}, ${delta[2].toFixed(2)}]`, 'transform');
+    // Log the move with detailed info
+    const distance = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
+    const objectNames = state.selectedIds.map(id => {
+      const obj = state.objects.find(o => o.id === id);
+      return obj?.name || 'Unknown';
+    }).join(', ');
+    useLogStore.getState().addLog(
+      `Moved: ${objectNames}\nVector: [${delta[0].toFixed(2)}, ${delta[1].toFixed(2)}, ${delta[2].toFixed(2)}]\nDistance: ${distance.toFixed(2)}`,
+      'transform'
+    );
   },
 
   scaleSelected: (scaleFactor: number) => {
@@ -574,8 +666,15 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       }
     });
 
-    // Log the scale
-    useLogStore.getState().addLog(`Scaled ${state.selectedIds.length} object(s) by ${scaleFactor}x`, 'transform');
+    // Log the scale with detailed info
+    const objectNames = state.selectedIds.map(id => {
+      const obj = state.objects.find(o => o.id === id);
+      return obj?.name || 'Unknown';
+    }).join(', ');
+    useLogStore.getState().addLog(
+      `Scaled: ${objectNames}\nScale Factor: ${scaleFactor}x`,
+      'transform'
+    );
   },
 
   groupSelected: (name) => {
@@ -1041,9 +1140,14 @@ export const useSceneStore = create<SceneState>((set, get) => ({
         historyIndex: newHistory.length - 1,
       });
 
-      // Log the boolean operation
+      // Log the boolean operation with detailed info
+      const operationNames = {
+        union: 'Union',
+        subtract: 'Subtract',
+        intersect: 'Intersect'
+      };
       useLogStore.getState().addLog(
-        `Boolean ${operation}: ${obj1.name} + ${obj2.name}`,
+        `Boolean: ${operationNames[operation]}\nObject 1: ${obj1.name}\nObject 2: ${obj2.name}`,
         'boolean'
       );
     } catch (error) {
