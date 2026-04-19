@@ -196,7 +196,7 @@ export default function Toolbar() {
     toggleSnapToGrid, toggleSnapToMidpoints, toggleSnapToVertices
   } = useSceneStore();
   const { user, isGuest } = useAuthStore();
-  const { projects, currentProject, setCurrentProject, fetchProjects } = useProjectStore();
+  const { projects, sampleProjects, currentProject, setCurrentProject, fetchProjects, fetchSampleProjects } = useProjectStore();
   const { openChat } = useChatStore();
   const { isVisible: isLogVisible, toggleVisibility: toggleLog } = useLogStore();
 
@@ -211,13 +211,15 @@ export default function Toolbar() {
   const canPerformCSG = selectedIds.length === 2;
   const canScale = selectedIds.length > 0;
   const anySnapEnabled = snapToGrid || snapToMidpoints || snapToVertices;
+  const isSampleProject = currentProject?.is_sample === true;
 
   // Fetch projects when user is logged in
   useEffect(() => {
     if (user && !isGuest && projects.length === 0) {
       fetchProjects();
+      fetchSampleProjects();
     }
-  }, [user, isGuest, projects.length, fetchProjects]);
+  }, [user, isGuest, projects.length, fetchProjects, fetchSampleProjects]);
 
   const handleProjectSelect = (project: typeof projects[0] | null) => {
     setCurrentProject(project);
@@ -275,7 +277,7 @@ export default function Toolbar() {
           </button>
 
           {showProjectDropdown && (
-            <div className={`absolute top-full left-0 mt-1 w-48 rounded-lg border shadow-xl z-50 ${
+            <div className={`absolute top-full left-0 mt-1 w-56 rounded-lg border shadow-xl z-50 ${
               isDark ? 'bg-[#1a1a24] border-white/10' : 'bg-white border-gray-200'
             }`}>
               <div className={`p-2 border-b ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
@@ -285,12 +287,20 @@ export default function Toolbar() {
                     isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  📁 Manage Projects
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                  </svg>
+                  Manage Projects
                 </button>
               </div>
-              <div className="p-2 max-h-48 overflow-y-auto">
+
+              <div className="p-2 max-h-64 overflow-y-auto">
+                {/* My Projects Section */}
+                <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  My Projects
+                </div>
                 {projects.length === 0 ? (
-                  <div className={`px-3 py-4 text-center text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <div className={`px-3 py-3 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                     No projects yet
                   </div>
                 ) : (
@@ -298,12 +308,15 @@ export default function Toolbar() {
                     <button
                       key={project.id}
                       onClick={() => handleProjectSelect(project)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs transition-colors ${
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
                         currentProject?.id === project.id
                           ? isDark ? 'bg-[#00d9ff]/20 text-[#00d9ff]' : 'bg-blue-50 text-blue-600'
                           : isDark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                      </svg>
                       <span className="truncate">{project.name}</span>
                       {currentProject?.id === project.id && (
                         <span className="ml-auto text-[#00d9ff]">✓</span>
@@ -311,14 +324,43 @@ export default function Toolbar() {
                     </button>
                   ))
                 )}
+
+                {/* Sample Projects Section */}
+                {sampleProjects.length > 0 && (
+                  <>
+                    <div className={`mt-2 mb-1 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`} />
+                    <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1.5 ${isDark ? 'text-[#a855f7]' : 'text-purple-600'}`}>
+                      Sample Projects
+                    </div>
+                    {sampleProjects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => handleProjectSelect(project)}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                          currentProject?.id === project.id
+                            ? isDark ? 'bg-[#a855f7]/20 text-[#a855f7]' : 'bg-purple-50 text-purple-600'
+                            : isDark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <span className="truncate">{project.name}</span>
+                        {currentProject?.id === project.id && (
+                          <span className="ml-auto text-[#a855f7]">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Save Button */}
-      {user && !isGuest && currentProject && (
+      {/* Save Button - hidden for sample projects */}
+      {user && !isGuest && currentProject && !isSampleProject && (
         <button
           onClick={handleSave}
           className={`ml-1 w-7 h-7 flex items-center justify-center rounded-md transition-all ${
