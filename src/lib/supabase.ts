@@ -18,6 +18,7 @@ export type ModelProject = {
   scene_data: SceneData;
   settings: ProjectSettings;
   is_public: boolean;
+  is_sample: boolean;
   created_at: string;
   updated_at: string;
 };

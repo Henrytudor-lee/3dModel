@@ -57,4 +57,11 @@ export const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
+  sparkles: () => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3L13.5 8.5L19 10L13.5 11.5L12 17L10.5 11.5L5 10L10.5 8.5L12 3Z" />
+      <path d="M19 15L19.5 17L21.5 17.5L19.5 18L19 20L18.5 18L16.5 17.5L18.5 17L19 15Z" />
+      <path d="M5 17L5.5 19L7.5 19.5L5.5 20L5 22L4.5 20L2.5 19.5L4.5 19L5 17Z" />
+    </svg>
+  ),
 };

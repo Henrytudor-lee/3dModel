@@ -6,6 +6,7 @@ import { useLogStore } from './logStore';
 
 interface ProjectState {
   projects: ModelProject[];
+  sampleProjects: ModelProject[];
   currentProject: ModelProject | null;
   loading: boolean;
   saving: boolean;
@@ -13,6 +14,7 @@ interface ProjectState {
 
   // Actions
   fetchProjects: () => Promise<void>;
+  fetchSampleProjects: () => Promise<void>;
   createProject: (name: string) => Promise<ModelProject | null>;
   updateProject: (id: string, updates: Partial<ModelProject>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
@@ -53,6 +55,7 @@ export function deserializeScene(data: SceneData): SceneObject[] {
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   projects: [],
+  sampleProjects: [],
   currentProject: null,
   loading: false,
   saving: false,
@@ -73,6 +76,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       .from('ModelProjects')
       .select('*')
       .eq('user_id', user.id)
+      .eq('is_sample', false)
       .order('updated_at', { ascending: false });
 
     if (error) {
@@ -82,6 +86,26 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
 
     set({ projects: data || [], loading: false });
+  },
+
+  fetchSampleProjects: async () => {
+    if (!supabase) return;
+
+    set({ loading: true, error: null });
+
+    const { data, error } = await supabase
+      .from('ModelProjects')
+      .select('*')
+      .eq('is_sample', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sample projects:', error);
+      set({ loading: false, error: error.message });
+      return;
+    }
+
+    set({ sampleProjects: data || [], loading: false });
   },
 
   createProject: async (name: string) => {
