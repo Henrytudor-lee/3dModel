@@ -7,7 +7,6 @@ import { useSceneStore } from '@/stores/sceneStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { useChatStore } from '@/stores/chatStore';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 
 // SVG Icons for a more professional look
 const Icons = {
@@ -15,6 +14,16 @@ const Icons = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
       <path d="M13 13l6 6" />
+    </svg>
+  ),
+  move: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="5 9 2 12 5 15" />
+      <polyline points="9 5 12 2 15 5" />
+      <polyline points="15 19 12 22 9 19" />
+      <polyline points="19 9 22 12 19 15" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="12" y1="2" x2="12" y2="22" />
     </svg>
   ),
   line: () => (
@@ -126,6 +135,27 @@ const Icons = {
       <polyline points="7 3 7 8 15 8" />
     </svg>
   ),
+  scale: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 3h6v6" />
+      <path d="M9 21H3v-6" />
+      <path d="M21 3l-7 7" />
+      <path d="M3 21l7-7" />
+    </svg>
+  ),
+  snap: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="4" cy="4" r="2" fill="currentColor" />
+      <circle cx="4" cy="12" r="2" fill="currentColor" />
+      <circle cx="4" cy="20" r="2" fill="currentColor" />
+      <circle cx="12" cy="4" r="2" fill="currentColor" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+      <circle cx="12" cy="20" r="2" fill="currentColor" />
+      <circle cx="20" cy="4" r="2" fill="currentColor" />
+      <circle cx="20" cy="12" r="2" fill="currentColor" />
+      <circle cx="20" cy="20" r="2" fill="currentColor" />
+    </svg>
+  ),
   ai: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -150,17 +180,27 @@ const tools = [
 
 export default function Toolbar() {
   const router = useRouter();
-  const { activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme, selectedIds, booleanOperation } = useSceneStore();
+  const {
+    activeTool, setActiveTool, showGrid, showAxes, toggleGrid, toggleAxes, theme, toggleTheme,
+    selectedIds, booleanOperation, scaleSelected,
+    snapToGrid, snapToMidpoints, snapToVertices,
+    toggleSnapToGrid, toggleSnapToMidpoints, toggleSnapToVertices
+  } = useSceneStore();
   const { user, isGuest } = useAuthStore();
   const { projects, currentProject, setCurrentProject, fetchProjects } = useProjectStore();
   const { openChat } = useChatStore();
 
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [showScaleDialog, setShowScaleDialog] = useState(false);
+  const [showSnapDropdown, setShowSnapDropdown] = useState(false);
+  const [scaleValue, setScaleValue] = useState('1.0');
 
   const activeToolColor = tools.find(t => t.id === activeTool)?.color || '#00d9ff';
   const activeToolData = tools.find(t => t.id === activeTool);
   const isDark = theme === 'dark';
   const canPerformCSG = selectedIds.length === 2;
+  const canScale = selectedIds.length > 0;
+  const anySnapEnabled = snapToGrid || snapToMidpoints || snapToVertices;
 
   // Fetch projects when user is logged in
   useEffect(() => {
@@ -189,6 +229,7 @@ export default function Toolbar() {
   };
 
   return (
+    <>
     <div className={`h-12 border-b flex items-center px-3 gap-1 ${
       isDark ? 'bg-[#1a1a24] border-white/5' : 'bg-[#ffffff] border-gray-200'
     }`}>
@@ -197,7 +238,7 @@ export default function Toolbar() {
         onClick={() => router.push('/projects')}
         className={`flex items-center gap-2 mr-3 pr-3 border-r ${isDark ? 'border-white/10' : 'border-gray-200'}`}
       >
-        <img src="/logo.png" alt="Logo" className="h-[72px] w-auto object-contain" />
+        <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
         <span className={`font-semibold tracking-tight text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>Workbench</span>
       </button>
 
@@ -353,6 +394,115 @@ export default function Toolbar() {
         >
           <Icons.intersect />
         </button>
+        <button
+          onClick={() => setActiveTool(activeTool === 'move' ? 'select' : 'move')}
+          disabled={!canScale}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            canScale
+              ? activeTool === 'move'
+                ? 'text-[#00d9ff]'
+                : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              : isDark ? 'text-white/20 cursor-not-allowed' : 'text-gray-400/50 cursor-not-allowed'
+          }`}
+          title="Move (select objects first)"
+        >
+          <Icons.move />
+        </button>
+        <button
+          onClick={() => setShowScaleDialog(true)}
+          disabled={!canScale}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            canScale
+              ? isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              : isDark ? 'text-white/20 cursor-not-allowed' : 'text-gray-400/50 cursor-not-allowed'
+          }`}
+          title="Scale (select objects first)"
+        >
+          <Icons.scale />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-white/10 mx-2" />
+
+      {/* Snap Controls */}
+      <div className="relative">
+        <button
+          onClick={() => setShowSnapDropdown(!showSnapDropdown)}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            anySnapEnabled
+              ? 'text-[#00d9ff]'
+              : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Snap Settings"
+        >
+          <Icons.snap />
+        </button>
+
+        {/* Snap Dropdown */}
+        {showSnapDropdown && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowSnapDropdown(false)} />
+            <div className={`absolute top-full mt-2 right-0 w-56 rounded-lg border shadow-xl z-50 ${
+              isDark ? 'bg-[#1a1a24] border-white/10' : 'bg-white border-gray-200'
+            }`}>
+              <div className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400 border-white/5' : 'text-gray-500 border-gray-100'}`}>
+                Snap To
+              </div>
+              <button
+                onClick={() => { toggleSnapToGrid(); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
+                  isDark ? 'hover:bg-white/5' : 'hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                  snapToGrid ? 'bg-[#00d9ff] border-[#00d9ff]' : isDark ? 'border-white/30' : 'border-gray-300'
+                }`}>
+                  {snapToGrid && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke={isDark ? '#0a0a0f' : 'white'} strokeWidth="2">
+                      <path d="M1 5L4 8L9 2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <span className={isDark ? 'text-white' : 'text-gray-900'}>Grid Intersections</span>
+              </button>
+              <button
+                onClick={() => { toggleSnapToMidpoints(); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
+                  isDark ? 'hover:bg-white/5' : 'hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                  snapToMidpoints ? 'bg-[#00d9ff] border-[#00d9ff]' : isDark ? 'border-white/30' : 'border-gray-300'
+                }`}>
+                  {snapToMidpoints && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke={isDark ? '#0a0a0f' : 'white'} strokeWidth="2">
+                      <path d="M1 5L4 8L9 2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <span className={isDark ? 'text-white' : 'text-gray-900'}>Midpoints (1/2)</span>
+              </button>
+              <button
+                onClick={() => { toggleSnapToVertices(); }}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
+                  isDark ? 'hover:bg-white/5' : 'hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                  snapToVertices ? 'bg-[#00d9ff] border-[#00d9ff]' : isDark ? 'border-white/30' : 'border-gray-300'
+                }`}>
+                  {snapToVertices && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke={isDark ? '#0a0a0f' : 'white'} strokeWidth="2">
+                      <path d="M1 5L4 8L9 2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <span className={isDark ? 'text-white' : 'text-gray-900'}>Object Vertices</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Divider */}
@@ -428,10 +578,6 @@ export default function Toolbar() {
           />
         </button>
 
-        {/* Language Switcher */}
-        <div className="mx-1">
-          <LanguageSwitcher />
-        </div>
       </div>
 
       {/* Spacer */}
@@ -469,5 +615,74 @@ export default function Toolbar() {
         <Icons.ai />
       </button>
     </div>
+
+    {/* Scale Dialog Modal */}
+    {showScaleDialog && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowScaleDialog(false)}>
+        <div
+          className={`${isDark ? 'bg-[#1a1a24]' : 'bg-white'} rounded-xl p-6 w-80 border ${isDark ? 'border-white/10' : 'border-gray-200'} shadow-xl`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Scale Objects</h3>
+          <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Enter scale factor (e.g., 1.5 for 1.5x, 0.5 for half size)
+          </p>
+          <input
+            type="number"
+            value={scaleValue}
+            onChange={(e) => setScaleValue(e.target.value)}
+            className={`w-full px-4 py-2 rounded-lg border mb-4 text-lg ${
+              isDark
+                ? 'bg-[#0a0a0f] border-white/20 text-white focus:border-[#00d9ff]'
+                : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-[#00d9ff]'
+            } focus:outline-none focus:ring-2 focus:ring-[#00d9ff]/50`}
+            placeholder="1.0"
+            step="0.1"
+            min="0.01"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                const factor = parseFloat(scaleValue);
+                if (!isNaN(factor) && factor > 0) {
+                  scaleSelected(factor);
+                  setShowScaleDialog(false);
+                  setScaleValue('1.0');
+                }
+              } else if (e.key === 'Escape') {
+                setShowScaleDialog(false);
+                setScaleValue('1.0');
+              }
+            }}
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowScaleDialog(false);
+                setScaleValue('1.0');
+              }}
+              className={`flex-1 py-2 rounded-lg border transition-colors ${
+                isDark ? 'border-white/20 text-gray-400 hover:bg-white/5' : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                const factor = parseFloat(scaleValue);
+                if (!isNaN(factor) && factor > 0) {
+                  scaleSelected(factor);
+                  setShowScaleDialog(false);
+                  setScaleValue('1.0');
+                }
+              }}
+              className="flex-1 py-2 rounded-lg bg-gradient-to-r from-[#00d9ff] to-[#00daf3] text-[#00363d] font-bold hover:opacity-90 transition-opacity"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

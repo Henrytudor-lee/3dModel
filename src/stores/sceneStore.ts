@@ -24,6 +24,127 @@ export interface SceneObject {
   children?: string[]; // Child object IDs for grouping
 }
 
+// Get vertices of a SceneObject in world coordinates
+function getObjectVertices(obj: SceneObject): [number, number, number][] {
+  const { type, geometry, transform } = obj;
+  const [px, py, pz] = transform.position;
+  const [sx, sy, sz] = transform.scale;
+
+  if (type === 'box') {
+    const w = (geometry.width as number) || 1;
+    const h = (geometry.height as number) || 1;
+    const d = (geometry.depth as number) || 1;
+    const hw = w * sx / 2, hh = h * sy / 2, hd = d * sz / 2;
+    // 8 vertices of a box
+    return [
+      [px - hw, py - hh, pz - hd],
+      [px + hw, py - hh, pz - hd],
+      [px - hw, py + hh, pz - hd],
+      [px + hw, py + hh, pz - hd],
+      [px - hw, py - hh, pz + hd],
+      [px + hw, py - hh, pz + hd],
+      [px - hw, py + hh, pz + hd],
+      [px + hw, py + hh, pz + hd],
+    ];
+  }
+
+  if (type === 'sphere') {
+    const r = (geometry.radius as number) || 0.5;
+    // For sphere, approximate with vertices at cardinal points
+    return [
+      [px - r * sx, py, pz],
+      [px + r * sx, py, pz],
+      [px, py - r * sy, pz],
+      [px, py + r * sy, pz],
+      [px, py, pz - r * sz],
+      [px, py, pz + r * sz],
+    ];
+  }
+
+  if (type === 'cylinder' || type === 'prism') {
+    const r = (geometry.radius as number) || 0.5;
+    const h = (geometry.height as number) || 1;
+    const sides = (geometry.sides as number) || 6;
+    const hh = h * sy / 2;
+    const vertices: [number, number, number][] = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2;
+      const x = px + Math.cos(angle) * r * sx;
+      const z = pz + Math.sin(angle) * r * sz;
+      vertices.push([x, py - hh, z]);
+      vertices.push([x, py + hh, z]);
+    }
+    return vertices;
+  }
+
+  return [[px, py, pz]];
+}
+
+// Get edge midpoints of a SceneObject in world coordinates
+function getObjectEdgeMidpoints(obj: SceneObject): [number, number, number][] {
+  const { type, geometry, transform } = obj;
+  const [px, py, pz] = transform.position;
+  const [sx, sy, sz] = transform.scale;
+
+  if (type === 'box') {
+    const w = (geometry.width as number) || 1;
+    const h = (geometry.height as number) || 1;
+    const d = (geometry.depth as number) || 1;
+    const hw = w * sx / 2, hh = h * sy / 2, hd = d * sz / 2;
+    // 12 edges of a box - return midpoints
+    return [
+      // Bottom face edges
+      [(px - hw + px + hw) / 2, py - hh, pz - hd], // bottom front
+      [(px - hw + px + hw) / 2, py - hh, pz + hd], // bottom back
+      [px - hw, py - hh, (pz - hd + pz + hd) / 2], // bottom left
+      [px + hw, py - hh, (pz - hd + pz + hd) / 2], // bottom right
+      // Top face edges
+      [(px - hw + px + hw) / 2, py + hh, pz - hd], // top front
+      [(px - hw + px + hw) / 2, py + hh, pz + hd], // top back
+      [px - hw, py + hh, (pz - hd + pz + hd) / 2], // top left
+      [px + hw, py + hh, (pz - hd + pz + hd) / 2], // top right
+      // Vertical edges
+      [px - hw, (py - hh + py + hh) / 2, pz - hd], // front left
+      [px + hw, (py - hh + py + hh) / 2, pz - hd], // front right
+      [px - hw, (py - hh + py + hh) / 2, pz + hd], // back left
+      [px + hw, (py - hh + py + hh) / 2, pz + hd], // back right
+    ];
+  }
+
+  if (type === 'sphere') {
+    const r = (geometry.radius as number) || 0.5;
+    // Approximate midpoints between cardinal points
+    return [
+      [(px - r * sx + px + r * sx) / 2, py, pz], // horizontal equator
+      [px, py - r * sy, (pz - r * sz + pz + r * sz) / 2], // vertical front-back
+      [px, (py - r * sy + py + r * sy) / 2, pz], // vertical
+    ];
+  }
+
+  if (type === 'cylinder' || type === 'prism') {
+    const r = (geometry.radius as number) || 0.5;
+    const h = (geometry.height as number) || 1;
+    const sides = (geometry.sides as number) || 6;
+    const hh = h * sy / 2;
+    const midpoints: [number, number, number][] = [];
+    for (let i = 0; i < sides; i++) {
+      const angle1 = (i / sides) * Math.PI * 2;
+      const angle2 = ((i + 1) / sides) * Math.PI * 2;
+      const x1 = px + Math.cos(angle1) * r * sx;
+      const z1 = pz + Math.sin(angle1) * r * sz;
+      const x2 = px + Math.cos(angle2) * r * sx;
+      const z2 = pz + Math.sin(angle2) * r * sz;
+      // Bottom edge midpoint
+      midpoints.push([(x1 + x2) / 2, py - hh, (z1 + z2) / 2]);
+      // Top edge midpoint
+      midpoints.push([(x1 + x2) / 2, py + hh, (z1 + z2) / 2]);
+    }
+    return midpoints;
+  }
+
+  return [];
+}
+
 // Helper to format geometry details
 function formatGeometry(obj: SceneObject): string {
   const { geometry, type } = obj;
@@ -122,7 +243,7 @@ function getUpdateMessage(obj: SceneObject, updates: Partial<SceneObject>, befor
   return `${obj.name}: ${parts.join(' | ')}`;
 }
 
-export type DrawingPhase = 'idle' | 'placing' | 'drag' | 'height';
+export type DrawingPhase = 'idle' | 'placing' | 'drag' | 'height' | 'moveBase' | 'moveTarget';
 
 export interface DrawingState {
   phase: DrawingPhase;
@@ -168,6 +289,11 @@ interface SceneState {
   drawingState: DrawingState;
   previewObject: SceneObject | null;
 
+  // Snap settings
+  snapToGrid: boolean;
+  snapToMidpoints: boolean;
+  snapToVertices: boolean;
+
   // History state
   history: Operation[];
   historyIndex: number;
@@ -184,12 +310,18 @@ interface SceneState {
   toggleSelectedId: (id: string) => void;
   setSelectedIds: (ids: string[]) => void;
   clearSelection: () => void;
+  moveSelected: (basePoint: [number, number, number], targetPoint: [number, number, number]) => void;
+  scaleSelected: (scaleFactor: number) => void;
   groupSelected: (name?: string) => void;
   ungroupObject: (id: string) => void;
   setActiveTool: (tool: string | null) => void;
   toggleGrid: () => void;
   toggleAxes: () => void;
   toggleTheme: () => void;
+  toggleSnapToGrid: () => void;
+  toggleSnapToMidpoints: () => void;
+  toggleSnapToVertices: () => void;
+  getSnapPoint: (point: [number, number, number]) => [number, number, number];
   setTheme: (theme: 'dark' | 'light') => void;
   clearScene: () => void;
 
@@ -260,6 +392,11 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   theme: 'dark',
   drawingState: initialDrawingState,
   previewObject: null,
+
+  // Snap settings
+  snapToGrid: true,
+  snapToMidpoints: false,
+  snapToVertices: false,
 
   // History
   history: [],
@@ -393,6 +530,60 @@ export const useSceneStore = create<SceneState>((set, get) => ({
 
   clearSelection: () => set({ selectedIds: [] }),
 
+  moveSelected: (basePoint: [number, number, number], targetPoint: [number, number, number]) => {
+    const state = get();
+    if (state.selectedIds.length === 0) return;
+
+    const delta: [number, number, number] = [
+      targetPoint[0] - basePoint[0],
+      targetPoint[1] - basePoint[1],
+      targetPoint[2] - basePoint[2],
+    ];
+
+    // Clone objects before modification for undo
+    const originalObjects = state.selectedIds.map(id => {
+      const obj = state.objects.find(o => o.id === id);
+      return obj ? deepClone(obj) : null;
+    }).filter((o): o is SceneObject => o !== null);
+
+    // Move each selected object by the delta
+    state.selectedIds.forEach(id => {
+      const obj = state.objects.find(o => o.id === id);
+      if (obj) {
+        const newPosition: [number, number, number] = [
+          obj.transform.position[0] + delta[0],
+          obj.transform.position[1] + delta[1],
+          obj.transform.position[2] + delta[2],
+        ];
+        get().updateObject(id, { transform: { ...obj.transform, position: newPosition } }, `Move ${obj.name}`);
+      }
+    });
+
+    // Log the move
+    useLogStore.getState().addLog(`Moved ${state.selectedIds.length} object(s) by [${delta[0].toFixed(2)}, ${delta[1].toFixed(2)}, ${delta[2].toFixed(2)}]`, 'transform');
+  },
+
+  scaleSelected: (scaleFactor: number) => {
+    const state = get();
+    if (state.selectedIds.length === 0) return;
+
+    // Scale each selected object
+    state.selectedIds.forEach(id => {
+      const obj = state.objects.find(o => o.id === id);
+      if (obj) {
+        const newScale: [number, number, number] = [
+          obj.transform.scale[0] * scaleFactor,
+          obj.transform.scale[1] * scaleFactor,
+          obj.transform.scale[2] * scaleFactor,
+        ];
+        get().updateObject(id, { transform: { ...obj.transform, scale: newScale } }, `Scale ${obj.name}`);
+      }
+    });
+
+    // Log the scale
+    useLogStore.getState().addLog(`Scaled ${state.selectedIds.length} object(s) by ${scaleFactor}x`, 'transform');
+  },
+
   groupSelected: (name) => {
     const state = get();
     if (state.selectedIds.length < 2) return;
@@ -475,6 +666,28 @@ export const useSceneStore = create<SceneState>((set, get) => ({
   toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
 
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+
+  toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
+
+  toggleSnapToMidpoints: () => set((state) => ({ snapToMidpoints: !state.snapToMidpoints })),
+
+  toggleSnapToVertices: () => set((state) => ({ snapToVertices: !state.snapToVertices })),
+
+  getSnapPoint: (point) => {
+    const state = get();
+    let snapPoint: [number, number, number] = [...point];
+
+    // Snap to grid intersection
+    if (state.snapToGrid) {
+      snapPoint = [
+        Math.round(snapPoint[0]),
+        snapPoint[1],
+        Math.round(snapPoint[2])
+      ];
+    }
+
+    return snapPoint;
+  },
 
   setTheme: (theme) => set({ theme }),
 

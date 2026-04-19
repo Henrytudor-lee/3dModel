@@ -24,7 +24,7 @@ export default function ProjectsPage() {
         fetchProjects();
       }
     }
-  }, [initialized, loading, user, isGuest, router, fetchProjects]);
+  }, [initialized, user, isGuest]);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
@@ -63,7 +63,7 @@ export default function ProjectsPage() {
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-sans">
       {/* TopNavBar */}
       <nav className="bg-[#0b1326]/80 backdrop-blur-xl border-b border-[#3b494c]/10 text-[#00e5ff] font-medium flex justify-between items-center w-full px-8 h-16 fixed top-0 z-50">
-        <Link href="/"><img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" /></Link>
+        <Link href="/"><img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" /></Link>
         <div className="flex items-center gap-4">
           <button
             onClick={handleSignOut}

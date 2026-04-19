@@ -65,7 +65,7 @@ export default function LoginPage() {
           onClick={() => router.push('/projects')}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <img src="/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
+          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
         </button>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />

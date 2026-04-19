@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase, ModelProject, SceneData, SerializedObject } from '@/lib/supabase';
 import { useAuthStore } from './authStore';
 import { SceneObject } from './sceneStore';
+import { useLogStore } from './logStore';
 
 interface ProjectState {
   projects: ModelProject[];
@@ -216,6 +217,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ? { ...state.currentProject, scene_data: sceneData, settings: newSettings, thumbnail, updated_at: new Date().toISOString() }
         : null,
     }));
+
+    // Notify user of successful save
+    useLogStore.getState().addLog('Project saved successfully', 'operation');
   },
 
   loadSceneData: async (projectId) => {

@@ -57,9 +57,10 @@ function getDrawingHint(activeTool: string | null, phase: string): string | null
 export default function AppPage() {
   const router = useRouter();
   const { initialized, loading, isGuest } = useAuthStore();
-  const { currentProject, loadSceneData, saveSceneData } = useProjectStore();
+  const { currentProject, loadSceneData, saveSceneData, saving } = useProjectStore();
   const { objects, setObjects, clearScene, showGrid, showAxes, theme, setTheme } = useSceneStore();
   const [saveCount, setSaveCount] = useState(0);
+  const [saveToast, setSaveToast] = useState(false);
   const { activeTool, drawingState } = useSceneStore();
   const hint = getDrawingHint(activeTool, drawingState.phase);
   const isDark = theme === 'dark';
@@ -73,23 +74,23 @@ export default function AppPage() {
 
   // Load project data when currentProject changes
   useEffect(() => {
-    if (initialized && !loading) {
-      if (currentProject?.scene_data) {
-        // Load scene data from project
-        const deserializedObjects = deserializeScene(currentProject.scene_data);
-        setObjects(deserializedObjects);
-        lastSavedObjects.current = JSON.stringify(deserializedObjects);
+    if (!initialized || loading) return;
 
-        // Load theme from project settings
-        if (currentProject.settings?.theme) {
-          setTheme(currentProject.settings.theme);
-        }
-      } else if (!isGuest && !currentProject) {
-        // Logged in but no project selected - go to projects
-        router.push('/projects');
+    if (currentProject?.scene_data) {
+      // Load scene data from project
+      const deserializedObjects = deserializeScene(currentProject.scene_data);
+      setObjects(deserializedObjects);
+      lastSavedObjects.current = JSON.stringify(deserializedObjects);
+
+      // Load theme from project settings
+      if (currentProject.settings?.theme) {
+        setTheme(currentProject.settings.theme);
       }
+    } else if (!isGuest && !currentProject) {
+      // Logged in but no project selected - go to projects
+      router.push('/projects');
     }
-  }, [initialized, loading, currentProject, isGuest, router, setObjects, setTheme]);
+  }, [initialized, loading, currentProject, isGuest, setObjects, setTheme, router]);
 
   // Manual save when saveCount changes
   useEffect(() => {
@@ -132,6 +133,29 @@ export default function AppPage() {
     };
   }, [currentProject]);
 
+  // Keyboard shortcut: Ctrl+S / Cmd+S to save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (currentProject) {
+          setSaveCount(prev => prev + 1);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentProject]);
+
+  // Show toast when save completes
+  useEffect(() => {
+    if (!saving && saveCount > 0) {
+      setSaveToast(true);
+      const timer = setTimeout(() => setSaveToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [saving, saveCount]);
+
   // Initialize ModelTree height to 50% on mount
   useEffect(() => {
     if (leftPanelRef.current) {
@@ -165,12 +189,10 @@ export default function AppPage() {
     }
   }, []);
 
-  // Auth guard
+  // Auth guard - no action needed, auth is handled above
   useEffect(() => {
-    if (initialized && loading) return;
-    if (!initialized) return;
-    // Guests are allowed, users without projects will be redirected via the effect above
-  }, [initialized, loading]);
+    // Auth state is already handled by the loading check above
+  }, [initialized]);
 
   if (!initialized || loading) {
     return <LoadingScreen message="Loading Studio..." />;
@@ -224,6 +246,20 @@ export default function AppPage() {
 
           {/* AI Chat Panel */}
           <AiChatPanel />
+
+          {/* Save Toast */}
+          {saveToast && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-fadeInOut">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border backdrop-blur-sm ${
+                isDark ? 'bg-green-500/90 border-green-400/30 text-white' : 'bg-green-100/90 border-green-300 text-green-900'
+              }`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-sm font-medium">Project saved</span>
+              </div>
+            </div>
+          )}
 
           {/* Tool hint */}
           {hint && (
