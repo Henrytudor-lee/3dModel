@@ -126,16 +126,6 @@ export default function LogPanel() {
     };
   }, []);
 
-  const resetPosition = useCallback(() => {
-    if (panelRef.current) {
-      panelRef.current.style.left = '24px';
-      panelRef.current.style.top = 'auto';
-      panelRef.current.style.bottom = '24px';
-      panelRef.current.style.width = '680px';
-      panelRef.current.style.height = '240px';
-    }
-  }, []);
-
   if (!isVisible) {
     return (
       <button
@@ -190,7 +180,9 @@ export default function LogPanel() {
             }`}
             title="Clear All"
           >
-            ×
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
           <button
             onClick={toggleVisibility}
@@ -200,24 +192,6 @@ export default function LogPanel() {
             title="Hide"
           >
             −
-          </button>
-          <button
-            onClick={toggleVisibility}
-            className={`w-5 h-5 flex items-center justify-center rounded text-[10px] ${
-              isDark ? 'text-white/30 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
-            }`}
-            title="Hide"
-          >
-            −
-          </button>
-          <button
-            onClick={resetPosition}
-            className={`w-5 h-5 flex items-center justify-center rounded text-[10px] ${
-              isDark ? 'text-white/30 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
-            }`}
-            title="Reset position"
-          >
-            ↺
           </button>
         </div>
       </div>
