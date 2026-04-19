@@ -1587,6 +1587,10 @@ function SceneContent({
               setActiveTool("select");
               return;
             }
+            // In move mode with non-idle phase, ignore clicks on non-selected objects
+            if (activeTool === "move" && drawingState.phase !== "idle") {
+              return;
+            }
             if (e.ctrlKey || e.metaKey) {
               // Multi-select with Ctrl/Cmd+click
               const { toggleSelectedId } = useSceneStore.getState();
