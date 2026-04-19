@@ -47,7 +47,6 @@ export default function LogPanel() {
   const { theme } = useSceneStore();
   const isDark = theme === 'dark';
 
-  const [autoScroll, setAutoScroll] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -132,7 +131,7 @@ export default function LogPanel() {
       panelRef.current.style.left = '24px';
       panelRef.current.style.top = 'auto';
       panelRef.current.style.bottom = '24px';
-      panelRef.current.style.width = '340px';
+      panelRef.current.style.width = '680px';
       panelRef.current.style.height = '240px';
     }
   }, []);
@@ -163,7 +162,7 @@ export default function LogPanel() {
       style={{
         left: 24,
         bottom: 24,
-        width: 340,
+        width: 680,
         height: 240,
         cursor: isDragging.current ? 'grabbing' : 'default',
       }}
@@ -185,24 +184,22 @@ export default function LogPanel() {
         </div>
         <div className="flex items-center gap-1" onMouseDown={(e) => e.stopPropagation()}>
           <button
-            onClick={() => setAutoScroll(!autoScroll)}
-            className={`w-5 h-5 flex items-center justify-center rounded text-[10px] ${
-              autoScroll
-                ? 'text-[#00d9ff]'
-                : isDark ? 'text-white/30 hover:text-white/50' : 'text-gray-400 hover:text-gray-600'
-            }`}
-            title="Auto-scroll"
-          >
-            ↓
-          </button>
-          <button
             onClick={clearLogs}
             className={`w-5 h-5 flex items-center justify-center rounded text-[10px] ${
               isDark ? 'text-white/30 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
             }`}
-            title="Clear"
+            title="Clear All"
           >
             ×
+          </button>
+          <button
+            onClick={toggleVisibility}
+            className={`w-5 h-5 flex items-center justify-center rounded text-[10px] ${
+              isDark ? 'text-white/30 hover:text-white/70' : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title="Hide"
+          >
+            −
           </button>
           <button
             onClick={toggleVisibility}

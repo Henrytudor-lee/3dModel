@@ -7,6 +7,7 @@ import { useSceneStore } from '@/stores/sceneStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { useChatStore } from '@/stores/chatStore';
+import { useLogStore } from '@/stores/logStore';
 
 // SVG Icons for a more professional look
 const Icons = {
@@ -164,6 +165,14 @@ const Icons = {
       <circle cx="16" cy="10" r="1" fill="currentColor" />
     </svg>
   ),
+  log: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="8" y1="13" x2="16" y2="13" />
+      <line x1="8" y1="17" x2="12" y2="17" />
+    </svg>
+  ),
 };
 
 const tools = [
@@ -189,6 +198,7 @@ export default function Toolbar() {
   const { user, isGuest } = useAuthStore();
   const { projects, currentProject, setCurrentProject, fetchProjects } = useProjectStore();
   const { openChat } = useChatStore();
+  const { isVisible: isLogVisible, toggleVisibility: toggleLog } = useLogStore();
 
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const [showScaleDialog, setShowScaleDialog] = useState(false);
@@ -576,6 +586,31 @@ export default function Toolbar() {
             className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full transition-all duration-300"
             style={{ backgroundColor: isDark ? '#f59e0b' : '#3b82f6', boxShadow: `0 0 6px ${isDark ? '#f59e0b' : '#3b82f6'}` }}
           />
+        </button>
+
+        {/* Log Toggle */}
+        <button
+          onClick={toggleLog}
+          className={`relative w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 ${
+            isLogVisible
+              ? 'text-[#00d9ff]'
+              : isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-500 hover:text-gray-700'
+          }`}
+          title="Toggle Log"
+        >
+          {isLogVisible && (
+            <div
+              className="absolute inset-0 rounded-md"
+              style={{ backgroundColor: 'rgba(0, 217, 255, 0.15)' }}
+            />
+          )}
+          <Icons.log />
+          {isLogVisible && (
+            <div
+              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+              style={{ backgroundColor: '#00d9ff', boxShadow: '0 0 6px #00d9ff' }}
+            />
+          )}
         </button>
 
       </div>
