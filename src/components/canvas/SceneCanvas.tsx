@@ -532,9 +532,13 @@ function SceneObject3D({
 function GroundPlane({
   onClick,
   onMove,
+  activeTool,
+  showGrid,
 }: {
   onClick: (point: [number, number, number]) => void;
   onMove: (point: [number, number, number]) => void;
+  activeTool: string | null;
+  showGrid: boolean;
 }) {
   const planeRef = useRef<THREE.Mesh>(null);
 
@@ -549,11 +553,13 @@ function GroundPlane({
 
   const handleClick = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
+      // Ignore ground plane in select mode or when grid is hidden
+      if (activeTool === 'select' || !showGrid) return;
       event.stopPropagation();
       const point = event.point;
       onClick([point.x, 0, point.z]);
     },
-    [onClick],
+    [onClick, activeTool, showGrid],
   );
 
   return (
@@ -1452,7 +1458,7 @@ function SceneContent({
       </group>
 
       {/* Ground plane for click detection */}
-      <GroundPlane onClick={onGroundClick} onMove={handleMouseMove} />
+      <GroundPlane onClick={onGroundClick} onMove={handleMouseMove} activeTool={activeTool} showGrid={showGrid} />
 
       {/* Drawing preview */}
       <DrawingPreview
