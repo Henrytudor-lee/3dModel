@@ -11,6 +11,8 @@ const typeColors: Record<string, string> = {
   line: '#22c55e',
   curve: '#a855f7',
   polygon: '#06b6d4',
+  circle: '#ec4899',
+  csgresult: '#f59e0b',
   group: '#94a3b8',
 };
 
@@ -57,6 +59,18 @@ const TypeIcons: Record<string, () => React.ReactNode> = {
   polygon: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <polygon points="12,2 20,8 17,18 7,18 4,8" />
+    </svg>
+  ),
+  circle: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+    </svg>
+  ),
+  csgresult: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+      <path d="M7 12l4-4 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   group: () => (
