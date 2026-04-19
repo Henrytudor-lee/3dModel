@@ -160,6 +160,25 @@ export default function PropertiesPanel() {
           </div>
         </div>
 
+        {/* Opacity slider */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Opacity</label>
+            <span className={`text-[10px] font-mono ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              {Math.round((selectedObject.material.opacity ?? 1) * 100)}%
+            </span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={(selectedObject.material.opacity ?? 1) * 100}
+            onChange={(e) => handleMaterialChange('opacity', parseFloat(e.target.value) / 100)}
+            className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
+            style={{ accentColor: typeColor }}
+          />
+        </div>
+
         {/* Transform Section */}
         <div className={`pt-2 border-t ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
           <label className={`block text-[10px] mb-2 font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>Transform</label>

@@ -223,7 +223,7 @@ export default function Toolbar() {
     setCurrentProject(project);
     setShowProjectDropdown(false);
     if (project) {
-      router.push('/app');
+      router.push('/workbench');
     }
   };
 
@@ -263,6 +263,9 @@ export default function Toolbar() {
                 : 'bg-gray-100 border-gray-200 hover:bg-gray-200'
             }`}
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#94a3b8' : '#6b7280'} strokeWidth="2" className="flex-shrink-0">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+            </svg>
             <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               {currentProject?.name || 'Select Project'}
             </span>

@@ -34,13 +34,13 @@ export default function ProjectsPage() {
     if (project) {
       setShowNewProjectModal(false);
       setNewProjectName('');
-      router.push('/app');
+      router.push('/workbench');
     }
   };
 
   const handleOpenProject = (project: typeof projects[0]) => {
     setCurrentProject(project);
-    router.push('/app');
+    router.push('/workbench');
   };
 
   const handleDeleteProject = async (id: string, e: React.MouseEvent) => {

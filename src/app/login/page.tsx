@@ -20,7 +20,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (initialized && !loading) {
       if (user || isGuest) {
-        router.push(isGuest ? '/app' : '/projects');
+        router.push(isGuest ? '/workbench' : '/projects');
       }
     }
   }, [initialized, loading, user, isGuest, router]);
@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   const handleGuestMode = () => {
     continueAsGuest();
-    router.push('/app');
+    router.push('/workbench');
   };
 
   if (!initialized || loading) {

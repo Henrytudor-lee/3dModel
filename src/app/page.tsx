@@ -14,7 +14,7 @@ export default function Home() {
     if (user || isGuest) {
       // Logged in or guest - go to projects (for user) or app (for guest)
       if (isGuest) {
-        router.push('/app');
+        router.push('/workbench');
       } else {
         router.push('/projects');
       }
