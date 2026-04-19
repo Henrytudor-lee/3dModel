@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/stores/chatStore';
-import { useSceneStore } from '@/stores/sceneStore';
+import { useSceneStore, SceneObject } from '@/stores/sceneStore';
 import { useI18n } from '@/i18n';
 
 interface ParsedObject {
@@ -25,7 +25,40 @@ interface ParsedObject {
 interface ParsedResponse {
   action: string;
   object?: ParsedObject;
+  target?: string;
+  targets?: string[];
+  updates?: {
+    transform?: {
+      position?: [number, number, number];
+      rotation?: [number, number, number];
+      scale?: [number, number, number];
+    };
+    material?: {
+      color?: string;
+      opacity?: number;
+      type?: 'standard' | 'metal' | 'glass' | 'emissive';
+      wireframe?: boolean;
+    };
+    geometry?: Record<string, number>;
+    visible?: boolean;
+  };
+  operation?: 'union' | 'intersect' | 'subtract';
+  filter?: { color?: string };
+  message?: string;
   reasoning?: string;
+  // For complex/carve action
+  subAction?: string;
+  baseObject?: ParsedObject;
+  cutObject?: {
+    type: 'box' | 'sphere' | 'cylinder' | 'prism';
+    name?: string;
+    geometry: Record<string, number>;
+    transform?: {
+      position?: [number, number, number];
+      rotation?: [number, number, number];
+      scale?: [number, number, number];
+    };
+  };
 }
 
 interface MessageState {
@@ -48,10 +81,12 @@ const EXAMPLE_PROMPTS = [
 export default function AiChatPanel() {
   const { t } = useI18n();
   const { isOpen, messages, isLoading, closeChat, addMessage, setLoading, setError } = useChatStore();
-  const { addObject } = useSceneStore();
+  const sceneStore = useSceneStore();
+  const { addObject } = sceneStore;
   const [input, setInput] = useState('');
   const [expandedMessages, setExpandedMessages] = useState<Record<string, boolean>>({});
   const [streamingContent, setStreamingContent] = useState<Record<string, string>>({});
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -149,41 +184,314 @@ export default function AiChatPanel() {
         }));
       }
 
-      // Try to parse and create object
+      // Try to parse and execute actions
       const parsed = parseAIResponse(aiContent);
-      if (parsed?.action === 'create' && parsed.object) {
-        const obj = parsed.object;
-        const objects = useSceneStore.getState().objects;
+      const objects = useSceneStore.getState().objects;
 
-        // Add _AI suffix and handle duplicate names
-        let baseName = obj.name.replace(/(_AI)?(_?\d*)$/, '');
-        baseName = `${baseName}_AI`;
+      // Helper to find objects by name (partial matching)
+      const findObjectByName = (name: string) => {
+        return objects.find(o => o.name.toLowerCase().includes(name.toLowerCase()));
+      };
 
-        // Find existing AI objects with same base name and increment
-        let finalName = baseName;
-        let counter = 1;
-        while (objects.some(o => o.name === finalName)) {
-          finalName = `${baseName}_${counter}`;
-          counter++;
+      // Helper to find all objects matching filter
+      const findObjectsByFilter = (filter: { color?: string }) => {
+        return objects.filter(o => {
+          if (filter.color && o.material.color.toLowerCase() === filter.color.toLowerCase()) {
+            return true;
+          }
+          return false;
+        });
+      };
+
+      if (parsed) {
+        let responseMessage = '';
+
+        switch (parsed.action) {
+          case 'create':
+            if (parsed.object) {
+              const obj = parsed.object;
+              // Add _AI suffix and handle duplicate names
+              let baseName = obj.name.replace(/(_AI)?(_?\d*)$/, '');
+              baseName = `${baseName}_AI`;
+
+              let finalName = baseName;
+              let counter = 1;
+              while (objects.some(o => o.name === finalName)) {
+                finalName = `${baseName}_${counter}`;
+                counter++;
+              }
+
+              addObject(
+                {
+                  id: crypto.randomUUID(),
+                  name: finalName,
+                  type: obj.type,
+                  geometry: obj.geometry,
+                  transform: obj.transform,
+                  material: obj.material,
+                  visible: true,
+                  children: [],
+                },
+                `Create ${finalName} via AI`
+              );
+              responseMessage = `I've created a ${finalName} for you in the scene! You can adjust its properties in the right panel.`;
+            }
+            break;
+
+          case 'modify':
+            if (parsed.target && parsed.updates) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                // Build the updates object with proper typing
+                const updatePayload: Partial<SceneObject> = {};
+                if (parsed.updates.transform) {
+                  updatePayload.transform = {
+                    position: parsed.updates.transform.position ?? targetObj.transform.position,
+                    rotation: parsed.updates.transform.rotation ?? targetObj.transform.rotation,
+                    scale: parsed.updates.transform.scale ?? targetObj.transform.scale,
+                  };
+                }
+                if (parsed.updates.material) {
+                  updatePayload.material = {
+                    color: parsed.updates.material.color ?? targetObj.material.color,
+                    opacity: parsed.updates.material.opacity ?? targetObj.material.opacity,
+                    type: parsed.updates.material.type ?? targetObj.material.type,
+                    wireframe: parsed.updates.material.wireframe ?? targetObj.material.wireframe,
+                  };
+                }
+                if (parsed.updates.geometry) {
+                  updatePayload.geometry = parsed.updates.geometry;
+                }
+                if (parsed.updates.visible !== undefined) {
+                  updatePayload.visible = parsed.updates.visible;
+                }
+                sceneStore.updateObject(targetObj.id, updatePayload, `Modify ${targetObj.name} via AI`);
+                responseMessage = `I've updated ${targetObj.name} as you requested.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'delete':
+            if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                sceneStore.removeObject(targetObj.id, `Delete ${targetObj.name} via AI`);
+                responseMessage = `I've deleted ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'select':
+            if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                sceneStore.setSelectedIds([targetObj.id]);
+                responseMessage = `Selected ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'selectMultiple':
+            if (parsed.targets && parsed.targets.length > 0) {
+              const matchedIds: string[] = [];
+              for (const targetName of parsed.targets) {
+                const obj = findObjectByName(targetName);
+                if (obj) matchedIds.push(obj.id);
+              }
+              if (parsed.filter?.color) {
+                const filteredObjs = findObjectsByFilter(parsed.filter);
+                for (const obj of filteredObjs) {
+                  if (!matchedIds.includes(obj.id)) {
+                    matchedIds.push(obj.id);
+                  }
+                }
+              }
+              if (matchedIds.length > 0) {
+                sceneStore.setSelectedIds(matchedIds);
+                responseMessage = `Selected ${matchedIds.length} object(s).`;
+              } else {
+                responseMessage = `I couldn't find any objects matching your selection.`;
+              }
+            }
+            break;
+
+          case 'duplicate':
+            if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                sceneStore.setSelectedIds([targetObj.id]);
+                sceneStore.copySelected();
+                sceneStore.startPaste([
+                  targetObj.transform.position[0] + 2,
+                  targetObj.transform.position[1],
+                  targetObj.transform.position[2]
+                ]);
+                sceneStore.confirmPaste();
+                responseMessage = `I've duplicated ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'hide':
+            if (parsed.target === 'all') {
+              for (const obj of objects) {
+                if (!obj.visible) {
+                  sceneStore.updateObject(obj.id, { visible: false }, `Hide ${obj.name} via AI`);
+                }
+              }
+              responseMessage = `I've hidden all objects.`;
+            } else if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                sceneStore.updateObject(targetObj.id, { visible: false }, `Hide ${targetObj.name} via AI`);
+                responseMessage = `I've hidden ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'show':
+            if (parsed.target === 'all') {
+              for (const obj of objects) {
+                if (!obj.visible) {
+                  sceneStore.updateObject(obj.id, { visible: true }, `Show ${obj.name} via AI`);
+                }
+              }
+              responseMessage = `I've shown all objects.`;
+            } else if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj) {
+                sceneStore.updateObject(targetObj.id, { visible: true }, `Show ${targetObj.name} via AI`);
+                responseMessage = `I've shown ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find an object matching "${parsed.target}". Please check the object name.`;
+              }
+            }
+            break;
+
+          case 'group':
+            if (parsed.targets && parsed.targets.length >= 2) {
+              const matchedIds: string[] = [];
+              for (const targetName of parsed.targets) {
+                const obj = findObjectByName(targetName);
+                if (obj) matchedIds.push(obj.id);
+              }
+              if (matchedIds.length >= 2) {
+                sceneStore.setSelectedIds(matchedIds);
+                sceneStore.groupSelected();
+                responseMessage = `I've grouped ${matchedIds.length} objects.`;
+              } else {
+                responseMessage = `I need at least 2 objects to group. Found: ${matchedIds.length}`;
+              }
+            }
+            break;
+
+          case 'ungroup':
+            if (parsed.target) {
+              const targetObj = findObjectByName(parsed.target);
+              if (targetObj && targetObj.type === 'group') {
+                sceneStore.ungroupObject(targetObj.id);
+                responseMessage = `I've ungrouped ${targetObj.name}.`;
+              } else {
+                responseMessage = `I couldn't find a group matching "${parsed.target}".`;
+              }
+            }
+            break;
+
+          case 'boolean':
+            if (parsed.targets && parsed.targets.length === 2 && parsed.operation) {
+              const obj1 = findObjectByName(parsed.targets[0]);
+              const obj2 = findObjectByName(parsed.targets[1]);
+              if (obj1 && obj2) {
+                sceneStore.setSelectedIds([obj1.id, obj2.id]);
+                sceneStore.booleanOperation(parsed.operation);
+                responseMessage = `I've performed ${parsed.operation} on ${obj1.name} and ${obj2.name}.`;
+              } else {
+                responseMessage = `I couldn't find the specified objects for the boolean operation.`;
+              }
+            }
+            break;
+
+          case 'undo':
+            sceneStore.undo();
+            responseMessage = `I've undone the last operation.`;
+            break;
+
+          case 'redo':
+            sceneStore.redo();
+            responseMessage = `I've redone the last operation.`;
+            break;
+
+          case 'info':
+            responseMessage = parsed.message || `I can help you create and modify 3D objects. Try saying things like "create a red cube" or "move Cube_01 to [1,2,3]".`;
+            break;
+
+          case 'complex':
+            if (parsed.subAction === 'carve' && parsed.baseObject && parsed.cutObject) {
+              // Create base object
+              const baseObjData = parsed.baseObject;
+              const baseObj: SceneObject = {
+                id: crypto.randomUUID(),
+                name: baseObjData.name || `Carve_Base_${Date.now()}`,
+                type: baseObjData.type,
+                geometry: baseObjData.geometry,
+                transform: baseObjData.transform,
+                material: baseObjData.material,
+                visible: true,
+              };
+              addObject(baseObj);
+
+              // Create cut object (invisible, just for CSG)
+              const cutObjData = parsed.cutObject;
+              const cutObj: SceneObject = {
+                id: crypto.randomUUID(),
+                name: cutObjData.name || `Carve_Cut_${Date.now()}`,
+                type: cutObjData.type,
+                geometry: cutObjData.geometry,
+                transform: {
+                  position: cutObjData.transform?.position || [0, 0, 0],
+                  rotation: cutObjData.transform?.rotation || [0, 0, 0],
+                  scale: cutObjData.transform?.scale || [1, 1, 1],
+                },
+                material: {
+                  color: '#000000',
+                  opacity: 1,
+                  type: 'standard',
+                  wireframe: false,
+                },
+                visible: true,
+              };
+              addObject(cutObj);
+
+              // Select both and perform subtract
+              await new Promise(resolve => setTimeout(resolve, 100));
+              sceneStore.setSelectedIds([baseObj.id, cutObj.id]);
+              sceneStore.booleanOperation('subtract');
+              responseMessage = `I've created a carved shape: ${baseObj.name} with ${cutObj.name} subtracted.`;
+            } else {
+              responseMessage = `I couldn't understand the complex operation. Try describing it differently.`;
+            }
+            break;
+
+          default:
+            responseMessage = `I'm not sure how to "${parsed.action}". I can help with creating, modifying, deleting, selecting, duplicating, hiding, showing, grouping, ungrouping, boolean operations, undo, redo, and carving complex shapes.`;
         }
 
-        addObject(
-          {
-            id: crypto.randomUUID(),
-            name: finalName,
-            type: obj.type,
-            geometry: obj.geometry,
-            transform: obj.transform,
-            material: obj.material,
-            visible: true,
-            children: [],
-          },
-          `Create ${finalName} via AI`
-        );
-        addMessage({
-          role: 'assistant',
-          content: `I've created a ${finalName} for you in the scene! You can adjust its properties in the right panel.`,
-        });
+        if (responseMessage) {
+          addMessage({
+            role: 'assistant',
+            content: responseMessage,
+          });
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -216,6 +524,17 @@ export default function AiChatPanel() {
     }));
   };
 
+  const handleClose = useCallback(() => {
+    setIsAnimatingOut(true);
+  }, []);
+
+  const handleAnimationEnd = useCallback(() => {
+    if (isAnimatingOut) {
+      closeChat();
+      setIsAnimatingOut(false);
+    }
+  }, [isAnimatingOut, closeChat]);
+
   const isMessageExpanded = (messageId: string) => expandedMessages[messageId] || false;
 
   const getDisplayContent = (message: { id: string; content: string }) => {
@@ -236,12 +555,16 @@ export default function AiChatPanel() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={closeChat}
+        className={`fixed inset-0 bg-black/50 z-40 ${isAnimatingOut ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+        onClick={handleClose}
+        onAnimationEnd={handleAnimationEnd}
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-[400px] max-w-full bg-[#1a1a24] border-l border-white/10 z-50 flex flex-col shadow-2xl">
+      <div
+        className={`fixed right-0 top-0 h-full w-[400px] max-w-full bg-[#1a1a24] border-l border-white/10 z-50 flex flex-col shadow-2xl ${isAnimatingOut ? 'animate-slideOutRight' : 'animate-slideInRight'}`}
+        onAnimationEnd={handleAnimationEnd}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -256,7 +579,7 @@ export default function AiChatPanel() {
             </div>
           </div>
           <button
-            onClick={closeChat}
+            onClick={handleClose}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
